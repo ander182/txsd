@@ -1,5 +1,5 @@
 from lxml import etree
-from exceptions import XSInputError
+from exceptions import XSInputError, XSParserError
 
 
 class Parser(object):
@@ -46,6 +46,7 @@ class Parser(object):
         raw_elements = []
         # Список complexType. Последовательность определить по ct_relations
         complex_types = []
+        complex_types_map = {}
         sorted_complex_types = []
         ct_relations = {}
 
@@ -77,9 +78,18 @@ class Parser(object):
         for sub_node in node.getchildren():
             if sub_node.tag in needed_tags:
                 #todo найти используемые элементы
-                pass
+                for rel_element in sub_node.getchildren():
+                    if rel_element.attrib.get('type'):
+                        container.append(rel_element.attrib.get('type'))
+                    elif rel_element.attrib.get('name'):
+                        container.append(rel_element.attrib.get('name'))
+                    else:
+                        raise XSParserError('Relation type name not found')
 
-        return []
+                    if rel_element.xpath(self.get_tag('complexType')):
+                        self.get_etree_relations(rel_element, container=container)
+        return container
+
 
 def main():
     parser = Parser()

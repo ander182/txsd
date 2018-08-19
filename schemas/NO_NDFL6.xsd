@@ -73,12 +73,13 @@
 																<xs:annotation>
 																	<xs:documentation>Код формы реорганизации</xs:documentation>
 																	<xs:documentation>Принимает значение:
-0 – ликвидация   | 
-1 – преобразование   | 
-2 – слияние   | 
-3 – разделение   | 
-5 – присоединение   | 
-6 – разделение с одновременным присоединением</xs:documentation>
+                                                                        0 – ликвидация   |
+                                                                        1 – преобразование   |
+                                                                        2 – слияние   |
+                                                                        3 – разделение   |
+                                                                        5 – присоединение   |
+                                                                        6 – разделение с одновременным присоединением
+                                                                    </xs:documentation>
 																</xs:annotation>
 																<xs:simpleType>
 																	<xs:restriction base="xs:string">
@@ -224,8 +225,9 @@
 										<xs:annotation>
 											<xs:documentation>Признак лица, подписавшего документ</xs:documentation>
 											<xs:documentation>Принимает значение:
-1 – налоговый агент   |
-2 – представитель налогового агента</xs:documentation>
+                                            1 – налоговый агент   |
+                                            2 – представитель налогового агента
+                                        </xs:documentation>
 										</xs:annotation>
 										<xs:simpleType>
 											<xs:restriction base="xs:string">
@@ -475,7 +477,8 @@
 							<xs:annotation>
 								<xs:documentation>Дата формирования документа</xs:documentation>
 								<xs:documentation>
-Дата в формате ДД.ММ.ГГГГ</xs:documentation>
+                                    Дата в формате ДД.ММ.ГГГГ
+                                </xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
 						<xs:attribute name="Период" use="required">
@@ -500,7 +503,8 @@
 							<xs:annotation>
 								<xs:documentation>Налоговый период (год)</xs:documentation>
 								<xs:documentation>
-Год в формате ГГГГ</xs:documentation>
+                                    Год в формате ГГГГ
+                                </xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
 						<xs:attribute name="КодНО" type="СОНОТип" use="required">
