@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
+
 class Element(object):
 
     def __init__(self):
-        super()
+        super().__init__()
 
         self.childs = []
         self.multiple_childs = []
@@ -12,10 +15,11 @@ class Element(object):
 
         self.annotation = None
 
+
 class XSAttribute(object):
 
     def __init__(self, name, required=False):
-        super()
+        super().__init__()
         self.name = name
         self.required = required
 
@@ -27,12 +31,13 @@ class XSAttribute(object):
 class XSSimpleType(object):
 
     def __init__(self):
-        super()
+        super().__init__()
 
 
 class XSStringType(XSSimpleType):
 
     def __init__(self):
+        super().__init__()
         self.min_length = None
         self.max_length = None
 
@@ -40,11 +45,12 @@ class XSStringType(XSSimpleType):
 class XSIntegerType(XSSimpleType):
 
     def __init__(self):
+        super().__init__()
         self.totalDigits = None
 
 
 class XSComplexType(object):
     def __init__(self, name=None):
-        super()
+        super().__init__()
         self.name = name
-        
+

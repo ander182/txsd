@@ -1,0 +1,3203 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!-- edited with XMLSpy v2013 (http://www.altova.com) by  () -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:usch="http://www.unisoftware.ru/schematron-extensions" xmlns:sql="urn:schemas-microsoft-com:mapping-schema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="Файл">
+		<xs:annotation>
+			<!---*******************************************************************************************************************************************************************************-->
+			<xs:appinfo>
+				<sch:pattern name="Проверка имени файла на соответствие значению атрибута @ИдФайл">
+					<sch:rule context="Файл">
+						<!--  Проверка имени файла на соответствие ИдФайл                                                                             -->
+						<sch:assert test="usch:getFileName() = @ИдФайл">
+							<usch:error code="0400400007" path="@ИдФайл" value-of-select="@ИдФайл" doc-id-path="usch:getFileName()" doc-id-caption="Файл">Имя файла обмена "<usch:value-of select="usch:getFileName()"/>" не совпадает со значением элемента ИдФайл "<usch:value-of select="@ИдФайл"/>"</usch:error>
+						</sch:assert>
+					</sch:rule>
+				</sch:pattern>
+			</xs:appinfo>
+			<!---*******************************************************************************************************************************************************************************-->
+			<xs:documentation>Файл обмена</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Документ">
+					<xs:annotation>
+						<!---*************************************************************************************************************************************************************-->
+						<xs:appinfo>
+							<sch:pattern name="Присутствие ФИО (руководителя организации / представителя)  в  зависимости  от  значения  ПрПодп и наличия НПЮЛ">
+								<sch:rule context="Документ">
+									<!-- Табл.4.7. Контроль  обязательности  присутствия  ФИО (руководителя организации / представителя)  в  зависимости  от  значения  ПрПодп и наличия НПЮЛ -->
+									<sch:assert test=" (Подписант/ФИО and Подписант/@ПрПодп=2) or (Подписант/ФИО and Подписант/@ПрПодп=1 and СвНП/НПЮЛ) or 	( ( (Подписант/ФИО) or  not(Подписант/ФИО) )  and Подписант/@ПрПодп=1 and СвНП/НПИП)  or 	( ( (Подписант/ФИО) or  not(Подписант/ФИО) )  and Подписант/@ПрПодп=1 and СвНП/НПФЛ) ">
+										<usch:error code="0400300003" path="Подписант/ФИО" value-of-select="Подписант/@ПрПодп"> Не выполнено условие присутствия (отсутствия) элемента Файл/Документ/Подписант/ФИО при значении элемента ПрПодп, равном "<usch:value-of select="Подписант/@ПрПодп"/>". </usch:error>
+									</sch:assert>
+								</sch:rule>
+							</sch:pattern>
+						</xs:appinfo>
+						<!---*************************************************************************************************************************************************************-->
+						<xs:documentation>Состав и структура документа</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="СвНП">
+								<xs:annotation>
+									<xs:documentation>Сведения о плательщике страховых взносов</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:choice>
+										<xs:element name="НПЮЛ">
+											<xs:annotation>
+												<xs:documentation>Плательщик страховых взносов - организация</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="СвРеоргЮЛ" minOccurs="0">
+														<xs:annotation>
+															<!---*********************************************************************************************************************************-->
+															<xs:appinfo>
+																<sch:pattern name="Присутствие атрибутов ИННЮЛ и КПП">
+																	<sch:rule context="СвРеоргЮЛ">
+																		<!-- Табл.4.5. Контроль  обязательности  присутствия  атрибутов  ИННЮЛ  и  КПП  в  зависимости  от  значения  атрибута  ФормРеорг       -->
+																		<sch:assert test=" (count(@ИННЮЛ)!=0 and @ФормРеорг!=0) or (count(@ИННЮЛ)=0 and @ФормРеорг=0)  ">
+																			<usch:error code="0400300003" path="@ИННЮЛ" value-of-select="@ФормРеорг">Не выполнено условие присутствия элемента Файл/Документ/СвНП/НПЮЛ/СвРеоргЮЛ/ИННЮЛ при значении элемента ФормРеорг, равном "<usch:value-of select="@ФормРеорг"/>".</usch:error>
+																		</sch:assert>
+																		<sch:assert test=" (count(@КПП)!=0 and @ФормРеорг!=0) or (count(@КПП)=0 and @ФормРеорг=0)  ">
+																			<usch:error code="0400300003" path="@КПП" value-of-select="@ФормРеорг">Не выполнено условие присутствия элемента Файл/Документ/СвНП/НПЮЛ/СвРеоргЮЛ/@КПП при значении элемента ФормРеорг, равном "<usch:value-of select="@ФормРеорг"/>".</usch:error>
+																		</sch:assert>
+																	</sch:rule>
+																</sch:pattern>
+															</xs:appinfo>
+															<!---*********************************************************************************************************************************-->
+															<xs:documentation>Сведения о реорганизованной (ликвидированной) организации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:attribute name="ФормРеорг" use="required">
+																<xs:annotation>
+																	<xs:documentation>Код формы реорганизации (ликвидация)</xs:documentation>
+																	<xs:documentation>Принимает значение:
+0 – ликвидация   | 
+1 – преобразование   | 
+2 – слияние   | 
+3 – разделение   | 
+4 – выделение   | 
+5 – присоединение   | 
+6 – разделение с одновременным присоединением   | 
+7 – выделение с одновременным присоединением</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																		<xs:enumeration value="3"/>
+																		<xs:enumeration value="4"/>
+																		<xs:enumeration value="5"/>
+																		<xs:enumeration value="6"/>
+																		<xs:enumeration value="7"/>
+																		<xs:enumeration value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ИННЮЛ" type="ИННЮЛТип" use="optional">
+																<xs:annotation>
+																	<xs:documentation>ИНН организации</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+															<xs:attribute name="КПП" type="КППТип" use="optional">
+																<xs:annotation>
+																	<xs:documentation>КПП</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+												<xs:attribute name="НаимОрг" use="required">
+													<xs:annotation>
+														<xs:documentation>Наименование организации, обособленного подразделения</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+															<xs:minLength value="1"/>
+															<xs:maxLength value="1000"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="ИННЮЛ" type="ИННЮЛТип" use="required">
+													<xs:annotation>
+														<xs:documentation>ИНН организации</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+												<xs:attribute name="КПП" use="required">
+													<xs:annotation>
+														<xs:documentation>КПП</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="КППТип"/>
+													</xs:simpleType>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="НПИП">
+											<xs:annotation>
+												<xs:documentation>Плательщик страховых взносов - индивидуальный предприниматель, глава крестьянского (фермерского) хозяйства</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="ФИОИП" type="ФИОТип">
+														<xs:annotation>
+															<xs:documentation>Фамилия, имя, отчество индивидуального предпринимателя</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+												<xs:attribute name="ИННФЛ" type="ИННФЛТип" use="required">
+													<xs:annotation>
+														<xs:documentation>ИНН физического лица</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="НПФЛ">
+											<xs:annotation>
+												<xs:documentation>Плательщик страховых взносов - физическое лицо, не являющееся индивидуальным предпринимателем</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="ФИО" type="ФИОТип">
+														<xs:annotation>
+															<xs:documentation>Фамилия, имя, отчество физического лица</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:choice>
+														<xs:element name="ИННФЛ" type="ИННФЛТип">
+															<xs:annotation>
+																<xs:documentation>ИНН физического лица</xs:documentation>
+															</xs:annotation>
+														</xs:element>
+														<xs:element name="СвНПФЛ">
+															<xs:annotation>
+																<xs:documentation>Сведения о физическом лице, не являющимся индивидуальным предпринимателем</xs:documentation>
+															</xs:annotation>
+															<xs:complexType>
+																<xs:sequence>
+																	<xs:element name="УдЛичнФЛ">
+																		<xs:annotation>
+																			<xs:documentation>Сведения о документе, удостоверяющем личность</xs:documentation>
+																		</xs:annotation>
+																		<xs:complexType>
+																			<xs:attribute name="КодВидДок" use="required">
+																				<xs:annotation>
+																					<xs:documentation>Код вида документа</xs:documentation>
+																				</xs:annotation>
+																				<xs:simpleType>
+																					<xs:restriction base="СПДУЛТип"/>
+																				</xs:simpleType>
+																			</xs:attribute>
+																			<xs:attribute name="СерНомДок" use="required">
+																				<xs:annotation>
+																					<xs:documentation>Серия и номер документа</xs:documentation>
+																				</xs:annotation>
+																				<xs:simpleType>
+																					<xs:restriction base="xs:string">
+																						<xs:minLength value="1"/>
+																						<xs:maxLength value="25"/>
+																					</xs:restriction>
+																				</xs:simpleType>
+																			</xs:attribute>
+																			<xs:attribute name="ВыдДок" use="required">
+																				<xs:annotation>
+																					<xs:documentation>Кем выдан</xs:documentation>
+																				</xs:annotation>
+																				<xs:simpleType>
+																					<xs:restriction base="xs:string">
+																						<xs:minLength value="1"/>
+																						<xs:maxLength value="255"/>
+																					</xs:restriction>
+																				</xs:simpleType>
+																			</xs:attribute>
+																			<xs:attribute name="ДатаДок" type="ДатаТип" use="required">
+																				<xs:annotation>
+																					<xs:documentation>Дата выдачи документа</xs:documentation>
+																				</xs:annotation>
+																			</xs:attribute>
+																		</xs:complexType>
+																	</xs:element>
+																	<xs:element name="АдрМЖРФ" type="АдрРФТип">
+																		<xs:annotation>
+																			<xs:documentation>Адрес места жительства в Российской Федерации</xs:documentation>
+																		</xs:annotation>
+																	</xs:element>
+																</xs:sequence>
+																<xs:attribute name="ДатаРожд" type="ДатаТип" use="required">
+																	<xs:annotation>
+																		<xs:documentation>Дата рождения</xs:documentation>
+																		<xs:documentation>
+Дата в формате ДД.ММ.ГГГГ</xs:documentation>
+																	</xs:annotation>
+																</xs:attribute>
+																<xs:attribute name="МестоРожд" use="required">
+																	<xs:annotation>
+																		<xs:documentation>Место рождения</xs:documentation>
+																	</xs:annotation>
+																	<xs:simpleType>
+																		<xs:restriction base="xs:string">
+																			<xs:minLength value="1"/>
+																			<xs:maxLength value="255"/>
+																		</xs:restriction>
+																	</xs:simpleType>
+																</xs:attribute>
+																<xs:attribute name="Гражд" type="ОКСМТип" use="required">
+																	<xs:annotation>
+																		<xs:documentation>Код страны гражданства</xs:documentation>
+																	</xs:annotation>
+																</xs:attribute>
+															</xs:complexType>
+														</xs:element>
+													</xs:choice>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:choice>
+									<xs:attribute name="ОКВЭД" type="ОКВЭДТип" use="required">
+										<xs:annotation>
+											<xs:documentation>Код вида экономической деятельности по классификатору ОКВЭД2</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+									<xs:attribute name="Тлф" use="optional">
+										<xs:annotation>
+											<xs:documentation>Номер контактного телефона</xs:documentation>
+										</xs:annotation>
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/>
+												<xs:maxLength value="20"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:attribute>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="Подписант">
+								<xs:annotation>
+									<!---*********************************************************************************************************************************************************-->
+									<xs:appinfo>
+										<sch:pattern name="Присутствие сведений о представителе">
+											<sch:rule context="Подписант">
+												<!-- Табл.4.8. Контроль  обязательности  присутствия  Сведений  о  представителе  налогоплательщика  в  зависимости  от  значения  ПрПодп  -->
+												<sch:assert test="usch:iif(@ПрПодп=2, count(СвПред)!=0, (count(СвПред)!=0 or count(СвПред)=0))">
+													<usch:error code="0400300003" path="@ПрПодп" value-of-select="@ПрПодп">Не выполнено условие присутствия (отсутствия) элемента Файл/Документ/Подписант/СвПред при значении элемента ПрПодп, равном "<usch:value-of select="@ПрПодп"/>".</usch:error>
+												</sch:assert>
+											</sch:rule>
+										</sch:pattern>
+									</xs:appinfo>
+									<!---*********************************************************************************************************************************************************-->
+									<xs:documentation>Сведения о лице, подписавшем документ</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="ФИО" type="ФИОТип" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="СвПред" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Сведения о представителе плательщика страховых взносов</xs:documentation>
+												<xs:documentation><![CDATA[Элемент обязателен при <ПрПодп>=2]]></xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:attribute name="НаимДок" use="required">
+													<xs:annotation>
+														<xs:documentation>Наименование документа, подтверждающего полномочия представителя</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+															<xs:minLength value="1"/>
+															<xs:maxLength value="120"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="НаимОрг" use="optional">
+													<xs:annotation>
+														<xs:documentation>Наименование организации - представителя плательщика</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+															<xs:minLength value="1"/>
+															<xs:maxLength value="1000"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="ПрПодп" use="required">
+										<xs:annotation>
+											<xs:documentation>Признак лица, подписавшего документ</xs:documentation>
+											<xs:documentation>Принимает значение:
+1 – плательщик страховых взносов   |
+2 – представитель плательщика страховых взносов</xs:documentation>
+										</xs:annotation>
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:length value="1"/>
+												<xs:enumeration value="1"/>
+												<xs:enumeration value="2"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:attribute>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="РасчетСВ">
+								<xs:annotation>
+									<!---*********************************************************************************************************************************************************-->
+									<xs:appinfo>
+										<sch:pattern name="Присутствие ОбязПлатСВ в зависимости от значения ПоМесту">
+											<sch:rule context="РасчетСВ">
+												<!-- Контроль  обязательности  присутствия элемента ОбязПлатСВ  в  зависимости  от  значения  ПоМесту  -->
+												<sch:assert test="usch:iif(../@ПоМесту!=124, count(ОбязПлатСВ)!=0, (count(ОбязПлатСВ)!=0 or count(ОбязПлатСВ)=0))">
+													<usch:error code="0400300003" path="ОбязПлатСВ" value-of-select="../@ПоМесту">Не выполнено условие присутствия (отсутствия) элемента Файл/Документ/РасчетСВ/ОбязПлатСВ при значении элемента ПоМесту, равном "<usch:value-of select="../@ПоМесту"/>".</usch:error>
+												</sch:assert>
+											</sch:rule>
+										</sch:pattern>
+									</xs:appinfo>
+									<!---*********************************************************************************************************************************************************-->
+									<!---*********************************************************************************************************************************************************-->
+									<xs:appinfo>
+										<sch:pattern name="Присутствие ОбязПлатСВ_КФХ в зависимости от значения ПоМесту">
+											<sch:rule context="РасчетСВ">
+												<!-- Контроль  обязательности  присутствия элемента ОбязПлатСВ_КФХ  в  зависимости  от  значения  ПоМесту  -->
+												<sch:assert test="usch:iif(../@ПоМесту=124, count(ОбязПлатСВ_КФХ)!=0, count(ОбязПлатСВ_КФХ)=0)">
+													<usch:error code="0400300003" path="ОбязПлатСВ" value-of-select="../@ПоМесту">Не выполнено условие присутствия (отсутствия) элемента Файл/Документ/РасчетСВ/ОбязПлатСВ_КФХ при значении элемента ПоМесту, равном "<usch:value-of select="../@ПоМесту"/>".</usch:error>
+												</sch:assert>
+											</sch:rule>
+										</sch:pattern>
+									</xs:appinfo>
+									<!---*********************************************************************************************************************************************************-->
+									<xs:documentation>Расчет по страховым взносам</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="ОбязПлатСВ" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Сводные данные об обязательствах плательщика страховых взносов</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="УплПерОПС" type="СВУплПерТип">
+														<xs:annotation>
+															<xs:documentation>Сумма страховых взносов на обязательное пенсионное страхование, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="УплПерОМС" type="СВУплПерТип">
+														<xs:annotation>
+															<xs:documentation>Сумма страховых взносов на обязательное медицинское страхование, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="УплПерОПСДоп" type="СВУплПерТип" minOccurs="0" maxOccurs="unbounded">
+														<xs:annotation>
+															<xs:documentation>Сумма страховых взносов на обязательное пенсионное страхование по дополнительному тарифу, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="УплПерДСО" type="СВУплПерТип" minOccurs="0" maxOccurs="unbounded">
+														<xs:annotation>
+															<xs:documentation>Сумма страховых взносов на дополнительное социальное обеспечение, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="УплПревОСС">
+														<xs:annotation>
+															<!---*********************************************************************************************************************************************************-->
+															<xs:appinfo>
+																<sch:pattern name="Присутствие одного и только одного из элементов - СумСВУплПер или ПревРасхСВПер">
+																	<sch:rule context="УплПревОСС">
+																		<!-- Контроль  обязательности  присутствия одного и только одного из элементов - СумСВУплПер или ПревРасхСВПер -->
+																		<sch:assert test="usch:iif(  count(УплПерОСС/@СумСВУплПер)!=0   ,   count(ПревРасхОСС/@ПревРасхСВПер)=0 ,   count(ПревРасхОСС/@ПревРасхСВПер)!=0   )">
+																			<usch:error code="0400300000" path="УплПерОСС/@СумСВУплПер" value-of-select="count(УплПерОСС/@СумСВУплПер) + count(ПревРасхОСС/@ПревРасхСВПер)">Не выполнено условие присутствия (отсутствия) одного и только одного из элементов Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/УплПерОСС/СумСВУплПер  или  Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/ПревРасхОСС/ПревРасхСВПер .</usch:error>
+																		</sch:assert>
+																	</sch:rule>
+																</sch:pattern>
+															</xs:appinfo>
+															<!---*********************************************************************************************************************************************************-->
+															<!---*********************************************************************************************************************************************************-->
+															<xs:appinfo>
+																<sch:pattern name="Присутствие одного и только одного из элементов - СумСВУпл1М или ПревРасхСВ1М">
+																	<sch:rule context="УплПревОСС">
+																		<!-- Контроль  обязательности  присутствия одного и только одного из элементов - СумСВУпл1М или ПревРасхСВ1М -->
+																		<sch:assert test="usch:iif(  count(УплПерОСС/@СумСВУпл1М)!=0   ,   count(ПревРасхОСС/@ПревРасхСВ1М)=0 ,   count(ПревРасхОСС/@ПревРасхСВ1М)!=0   )">
+																			<usch:error code="0400300000" path="УплПерОСС/@СумСВУпл1М" value-of-select="count(УплПерОСС/@СумСВУпл1М) + count(ПревРасхОСС/@ПревРасхСВ1М)">Не выполнено условие присутствия (отсутствия) одного и только одного из элементов Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/УплПерОСС/СумСВУпл1М  или  Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/ПревРасхОСС/ПревРасхСВ1М .</usch:error>
+																		</sch:assert>
+																	</sch:rule>
+																</sch:pattern>
+															</xs:appinfo>
+															<!---*********************************************************************************************************************************************************-->
+															<!---*********************************************************************************************************************************************************-->
+															<xs:appinfo>
+																<sch:pattern name="Присутствие одного и только одного из элементов - СумСВУпл2М или ПревРасхСВ2М">
+																	<sch:rule context="УплПревОСС">
+																		<!-- Контроль  обязательности  присутствия одного и только одного из элементов - СумСВУпл2М или ПревРасхСВ2М -->
+																		<sch:assert test="usch:iif(  count(УплПерОСС/@СумСВУпл2М)!=0   ,   count(ПревРасхОСС/@ПревРасхСВ2М)=0 ,   count(ПревРасхОСС/@ПревРасхСВ2М)!=0   )">
+																			<usch:error code="0400300000" path="УплПерОСС/@СумСВУпл2М" value-of-select="count(УплПерОСС/@СумСВУпл2М) + count(ПревРасхОСС/@ПревРасхСВ2М)">Не выполнено условие присутствия (отсутствия) одного и только одного из элементов Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/УплПерОСС/СумСВУпл2М  или  Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/ПревРасхОСС/ПревРасхСВ2М .</usch:error>
+																		</sch:assert>
+																	</sch:rule>
+																</sch:pattern>
+															</xs:appinfo>
+															<!---*********************************************************************************************************************************************************-->
+															<!---*********************************************************************************************************************************************************-->
+															<xs:appinfo>
+																<sch:pattern name="Присутствие одного и только одного из элементов - СумСВУпл3М или ПревРасхСВПер">
+																	<sch:rule context="УплПревОСС">
+																		<!-- Контроль  обязательности  присутствия одного и только одного из элементов - СумСВУпл3М или ПревРасхСВПер -->
+																		<sch:assert test="usch:iif(  count(УплПерОСС/@СумСВУпл3М)!=0   ,   count(ПревРасхОСС/@ПревРасхСВ3М)=0 ,   count(ПревРасхОСС/@ПревРасхСВ3М)!=0   )">
+																			<usch:error code="0400300000" path="УплПерОСС/@СумСВУпл3М" value-of-select="count(УплПерОСС/@СумСВУпл3М) + count(ПревРасхОСС/@ПревРасхСВ3М)">Не выполнено условие присутствия (отсутствия) одного и только одного из элементов Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/УплПерОСС/СумСВУпл3М  или  Файл/Документ/РасчетСВ/ОбязПлатСВ/УплПревОСС/ПревРасхОСС/ПревРасхСВ3М .</usch:error>
+																		</sch:assert>
+																	</sch:rule>
+																</sch:pattern>
+															</xs:appinfo>
+															<!---*********************************************************************************************************************************************************-->
+															<xs:documentation>Сумма страховых взносов на обязательное социальное страхование на случай временной нетрудоспособности и в связи с материнством, подлежащая уплате за расчетный (отчетный) период / Сумма превышения произведенных плательщиком расходов на выплату страхового обеспечения над исчисленными страховыми взносами на обязательное социальное страхование на случай временной нетрудоспособности и в связи с материнством за расчетный (отчетный) период</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="УплПерОСС" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Сумма страховых взносов на обязательное социальное страхование на случай временной нетрудоспособности и в связи с материнством, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:attribute name="СумСВУплПер" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="СумСВУпл1М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный (отчетный) период, в том числе за первый из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="СумСВУпл2М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный (отчетный) период, в том числе за второй из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="СумСВУпл3М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный (отчетный) период, в том числе за третий из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="ПревРасхОСС" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Сумма превышения произведенных плательщиком расходов на выплату страхового обеспечения над исчисленными страховыми взносами на обязательное социальное страхование на случай временной нетрудоспособности и в связи с материнством за расчетный (отчетный) период</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:attribute name="ПревРасхСВПер" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Суммы превышения расходов над исчисленными страховыми взносами за расчетный (отчетный) период</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ПревРасхСВ1М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Суммы превышения расходов над исчисленными страховыми взносами за первый из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:fractionDigits value="2"/>
+																					<xs:totalDigits value="17"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ПревРасхСВ2М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Суммы превышения расходов над исчисленными страховыми взносами за второй из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ПревРасхСВ3М" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Суммы превышения расходов над исчисленными страховыми взносами за третий из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+															<xs:attribute name="КБК" type="КБКТип" use="required">
+																<xs:annotation>
+																	<xs:documentation>Код бюджетной классификации</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="РасчСВ_ОПС_ОМС" maxOccurs="unbounded">
+														<xs:annotation>
+															<xs:documentation>Расчет сумм страховых взносов на обязательное пенсионное и медицинское страхование</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="РасчСВ_ОПС">
+																	<xs:annotation>
+																		<xs:documentation>Расчет сумм взносов на обязательное пенсионное страхование</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="КолСтрахЛицВс" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество застрахованных лиц, всего (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="КолЛицНачСВВс" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество физических лиц, с выплат которым исчислены страховые взносы, всего (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПревБазОПС" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество физических лиц, с выплат которым исчислены страховые взносы в размере, превышающем предельную величину базы для исчисления страховых взносов на обязательное пенсионное страхование (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма выплат и иных вознаграждений, начисленных в пользу физических лиц</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="БазНачислСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>База для исчисления страховых взносов</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="БазПревышОПС" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>База для исчисления страховых взносов, в том числе в размере превышающем предельную величину базы для исчисления страховых взносов на обязательное пенсионное страхование</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НачислСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Исчислено страховых взносов</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НачислСВНеПрев" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Исчислено страховых взносов с базы, не превышающей предельную величину базы для исчисления страховых взносов на обязательное пенсионное страхование</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НачислСВПрев" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Исчислено страховых взносов, в том числе с базы, превышающей предельную величину базы для исчисления страховых взносов на обязательное пенсионное страхование</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="РасчСВ_ОМС">
+																	<xs:annotation>
+																		<xs:documentation>Расчет сумм взносов на обязательное медицинское страхование</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="КолСтрахЛицВс" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество застрахованных лиц, всего (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="КолЛицНачСВВс" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество физических лиц, с выплат которым исчислены страховые взносы, всего (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма выплат и иных вознаграждений, начисленных в пользу физических лиц</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="БазНачислСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>База для исчисления страховых взносов</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НачислСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Исчислено страховых взносов</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="РасчСВ_ОПС428" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Расчет сумм страховых взносов на обязательное пенсионное страхование по дополнительному тарифу, для отдельных категорий плательщиков страховых взносов, указанных в статье 428 Налогового Кодекса Российской Федерации</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="РасчСВ_428.1-2" minOccurs="0" maxOccurs="unbounded">
+																				<xs:annotation>
+																					<xs:documentation>Расчет сумм страховых взносов по дополнительному тарифу для отдельных категорий плательщиков страховых взносов, указанных в пунктах 1 и 2 статьи 428 Налогового кодекса Российской Федерации</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element name="КолЛицНачСВ" type="КолЛицТип">
+																							<xs:annotation>
+																								<xs:documentation>Количество физических лиц, с выплат и иных вознаграждений которым исчислены страховые взносы по дополнительному тарифу (чел.)</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Сумма выплат и иных вознаграждений, исчисленных в пользу физических лиц</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="БазНачислСВДоп" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>База для исчисления страховых взносов по дополнительному тарифу</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="НачислСВДоп" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Исчислено страховых взносов по дополнительному тарифу</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																					</xs:sequence>
+																					<xs:attribute name="ПрОснСВДоп" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Признак основания исчисления сумм страховых взносов по дополнительному тарифу</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="1"/>
+																								<xs:enumeration value="1"/>
+																								<xs:enumeration value="2"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																			<xs:element name="РасчСВ_428.3" minOccurs="0" maxOccurs="unbounded">
+																				<xs:annotation>
+																					<xs:documentation>Расчет сумм страховых взносов на обязательное пенсионное страхование по дополнительному тарифу для отдельных категорий плательщиков страховых взносов, указанных в пункте 3 статьи 428 Налогового Кодекса Российской Федерации</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element name="КолЛицНачСВ" type="КолЛицТип">
+																							<xs:annotation>
+																								<xs:documentation>Количество физических лиц, с выплат и иных вознаграждений которым исчислены страховые взносы по дополнительному тарифу (чел.)</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Сумма выплат и иных вознаграждений, начисленных в пользу физических лиц</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="БазНачислСВДоп" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>База для исчисления страховых взносов по дополнительному тарифу</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																						<xs:element name="НачислСВДоп" type="СвСум1Тип">
+																							<xs:annotation>
+																								<xs:documentation>Исчислено страховых взносов по дополнительному тарифу</xs:documentation>
+																							</xs:annotation>
+																						</xs:element>
+																					</xs:sequence>
+																					<xs:attribute name="КодОснов" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Код основания исчисления</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="1"/>
+																								<xs:enumeration value="1"/>
+																								<xs:enumeration value="2"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="ОсновЗап" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Основание заполнения</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="1"/>
+																								<xs:enumeration value="1"/>
+																								<xs:enumeration value="2"/>
+																								<xs:enumeration value="3"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="КласУслТруд" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Код класса условий труда</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="1"/>
+																								<xs:enumeration value="1"/>
+																								<xs:enumeration value="2"/>
+																								<xs:enumeration value="3"/>
+																								<xs:enumeration value="4"/>
+																								<xs:enumeration value="5"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="РасчСВ_ДСО" minOccurs="0" maxOccurs="unbounded">
+																	<xs:annotation>
+																		<xs:documentation>Расчет сумм страховых взносов на дополнительное социальное обеспечение членов летных экипажей воздушных судов гражданской авиации, а также для отдельных категорий работников организаций угольной промышленности</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="КолЛицНачСВ" type="КолЛицТип">
+																				<xs:annotation>
+																					<xs:documentation>Количество физических лиц, с выплат и иных вознаграждений которым исчислены страховые взносы на дополнительное социальное обеспечение (чел.)</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма выплат и иных вознаграждений, начисленных в пользу физических лиц</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="БазНачислСВДСО" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>База для исчисления страховых взносов на дополнительное социальное обеспечение</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="НачислСВДСО" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Исчислено страховых взносов на дополнительное социальное обеспечение</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="ПрРасчСум" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Код основания исчисления страховых взносов на дополнительное социальное обеспечение</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:string">
+																					<xs:length value="1"/>
+																					<xs:enumeration value="1"/>
+																					<xs:enumeration value="2"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+															<xs:attribute name="ТарифПлат" use="required">
+																<xs:annotation>
+																	<xs:documentation>Код тарифа плательщика</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="2"/>
+																		<xs:enumeration value="01"/>
+																		<xs:enumeration value="02"/>
+																		<xs:enumeration value="03"/>
+																		<xs:enumeration value="04"/>
+																		<xs:enumeration value="05"/>
+																		<xs:enumeration value="06"/>
+																		<xs:enumeration value="07"/>
+																		<xs:enumeration value="08"/>
+																		<xs:enumeration value="09"/>
+																		<xs:enumeration value="10"/>
+																		<xs:enumeration value="11"/>
+																		<xs:enumeration value="12"/>
+																		<xs:enumeration value="13"/>
+																		<xs:enumeration value="14"/>
+																		<xs:enumeration value="15"/>
+																		<xs:enumeration value="16"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="РасчСВ_ОСС.ВНМ">
+														<xs:annotation>
+															<xs:documentation>Расчет сумм страховых взносов на обязательное социальное страхование на случай временной нетрудоспособности и в связи с материнством</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="КолСтрахЛицВс" type="КолЛицТип">
+																	<xs:annotation>
+																		<xs:documentation>Количество застрахованных лиц, всего (чел.)</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ВыплНачислФЛ" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Сумма выплат и иных вознаграждений, начисленных в пользу физических лиц</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="НеОбложенСВ" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Сумма, не подлежащая обложению страховыми взносами</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазПревышСВ" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Сумма, превышающая предельную величину базы для исчисления страховых взносов</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазНачислСВ" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>База для исчисления страховых взносов</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазНачСВФарм" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>База для исчисления страховых взносов, из них сумма выплат и иных вознаграждений, производимых аптечными организациями и индивидуальными предпринимателями, имеющими лицензию на фармацевтическую деятельность, физическим лицам, которые в соответствии с Федеральным законом от 21 ноября 2011 года № 323-ФЗ «Об основах охраны здоровья граждан в Российской Федерации» (Собрание законодательства Российской Федерации, 2011, № 48, ст. 6724; 2016, № 27, ст. 4219) имеют право на занятие фармацевтической деятельностью или допущены к ее осуществлению</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазНачСВЧлЭС" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>База для исчисления страховых взносов, из них сумма выплат и иных вознаграждений членам экипажей судов, зарегистрированных в Российском международном реестре судов, за исполнение трудовых обязанностей члена экипажа судна</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазНачСВПат" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>База для исчисления страховых взносов, из них сумма выплат и иных вознаграждений, начисленных в пользу физических лиц, занятых в виде экономической деятельности, указанном в патенте за исключением индивидуальных предпринимателей, осуществляющих виды предпринимательской деятельности, указанные в подпунктах 19, 45 - 48 пункта 2 статьи 346.43 Налогового кодекса Российской Федерации</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БазНачСВИнЛиц" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>База для исчисления страховых взносов, из них сумма выплат и иных вознаграждений, начисленных в пользу иностранных граждан и лиц без гражданства, временно пребывающих в Российской Федерации, кроме лиц, являющихся гражданами государств-членов Евразийского экономического союза</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="НачислСВ" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Исчислено страховых взносов</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ПроизвРасхСО" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Произведено расходов на выплату страхового обеспечения</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ВозмРасхСО" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Возмещено ФСС расходов на выплату страхового обеспечения</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="УплСВПрев">
+																	<xs:annotation>
+																		<xs:documentation>Сумма страховых взносов, подлежащая уплате (сумма превышения произведенных расходов над исчисленными страховыми взносами)</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="УплВсегоПер" type="УплСВПревТип">
+																				<xs:annotation>
+																					<xs:documentation>Всего с начала расчетного периода</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="УплВсегоПосл3М" type="УплСВПревТип">
+																				<xs:annotation>
+																					<xs:documentation>В том числе за последние три месяца расчетного (отчетного) периода, всего</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="Упл1Посл3М" type="УплСВПревТип">
+																				<xs:annotation>
+																					<xs:documentation>В том числе 1 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="Упл2Посл3М" type="УплСВПревТип">
+																				<xs:annotation>
+																					<xs:documentation>В том числе 2 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="Упл3Посл3М" type="УплСВПревТип">
+																				<xs:annotation>
+																					<xs:documentation>В том числе 3 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+															<xs:attribute name="ПризВыпл" use="required">
+																<xs:annotation>
+																	<xs:documentation>Признак выплат</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="РасхОССЗак" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Расходы по обязательному социальному страхованию на случай временной нетрудоспособности и в связи с материнством и расходы, осуществляемые в соответствии с законодательством Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ПосВрНетр" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Пособия по временной нетрудоспособности (без учета пособий, выплаченных в пользу работающих иностранных граждан и лиц без гражданства, временно пребывающих в Российской Федерации, кроме лиц, являющихся гражданами государств - членов Евразийского экономического союза)</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ПосВрНетрСов" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Пособия по временной нетрудоспособности (без учета пособий, выплаченных в пользу работающих иностранных граждан и лиц без гражданства, временно пребывающих в Российской Федерации, кроме лиц, являющихся гражданами государств - членов Евразийского экономического союза) по внешнему совместительству</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ПосВрНетрИн" type="РасхОСС2Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Пособия по временной нетрудоспособности работающим иностранным гражданам и лицам без гражданства, временно пребывающим в Российской Федерации, кроме лиц, являющихся гражданами государств - членов Евразийского экономического союза</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ПосВрНетрИнСов" type="РасхОСС2Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Пособия по временной нетрудоспособности работающим иностранным гражданам и лицам без гражданства, временно пребывающим в Российской Федерации, кроме лиц, являющихся гражданами государств - членов Евразийского экономического союза, по внешнему совместительству</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БеремРод" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>По беременности и родам</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="БеремРодСов" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>По беременности и родам по внешнему совместительству</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ЕдПосРанБерем" type="РасхОСС3Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Единовременное пособие женщинам, вставшим на учет в медицинских организациях в ранние сроки беременности</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ЕдПосРожд" type="РасхОСС3Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Единовременное пособие при рождении ребенка</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ЕжПосУходРеб" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Ежемесячное пособие по уходу за ребенком</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ЕжПосУходРеб1" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Ежемесячное пособие по уходу за первым ребенком</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ЕжПосУходРеб2" type="РасхОСС1Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Ежемесячное пособие по уходу за вторым и последующими детьми</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ОплДопВыхИнв" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Оплата дополнительных выходных дней для ухода за детьми-инвалидами</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:attribute name="КолВыпл" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Количество дней, выплат, пособий</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:integer">
+																					<xs:totalDigits value="7"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="РасхВсего" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Расходы, всего</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="РасхФинФБ" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Расходы за счет средств, финансируемых из федерального бюджета</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="СВДопУходИнв" type="РасхОСС4Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Страховые взносы, исчисленные на оплату дополнительных выходных дней для ухода за детьми-инвалидами</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="СоцПосПогреб" type="РасхОСС2Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Социальное пособие на погребение или возмещение стоимости гарантированного перечня услуг по погребению</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="Итого" type="РасхОСС4Тип">
+																	<xs:annotation>
+																		<xs:documentation>Итого</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="НачНевыплПос" type="РасхОСС4Тип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Справочно: начисленные и невыплаченные пособия</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="ВыплФинФБ" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Выплаты, произведенные за счет средств, финансируемых из федерального бюджета</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ЧернобАЭС" type="ВыпФинФБТип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Выплаты, финансируемые за счет средств федерального бюджета, в размерах сверх установленных законодательством Российской Федерации об обязательном социальном страховании, гражданам, пострадавшим вследствие катастрофы на Чернобыльской АЭС</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ПОМаяк" type="ВыпФинФБТип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Выплаты, финансируемые за счет средств федерального бюджета, в размерах сверх установленных законодательством Российской Федерации об обязательном социальном страховании, гражданам, пострадавшим вследствие аварии на производственном объединении «Маяк»</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="СемипалатПолигон" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Выплаты, финансируемые за счет средств федерального бюджета, в размерах сверх установленных законодательством Российской Федерации об обязательном социальном страховании, гражданам, пострадавшим вследствие ядерных испытаний на Семипалатинском полигоне</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="Всего" type="РасхВыпл1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Всего</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПосВрНетр" type="РасхВыпл2Тип">
+																				<xs:annotation>
+																					<xs:documentation>Пособие по временной нетрудоспособности</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="ПодрОсобРиск" type="ВыпФинФБТип" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Выплаты, финансируемые за счет средств федерального бюджета, в размерах сверх установленных законодательством Российской Федерации об обязательном социальном страховании лицам из подразделений особого риска, а также лицам, получившим или перенесшим лучевую болезнь или ставшим инвалидами вследствие радиационных аварий, кроме Чернобыльской АЭС</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="ДопФЗ255" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Дополнительные выплаты пособий по временной нетрудоспособности, по беременности и родам, связанные с зачетом в страховой стаж застрахованного лица периодов службы, в течение которых гражданин не подлежал обязательному социальному страхованию на случай временной нетрудоспособности и в связи с материнством в соответствии с частью 4 статьи 3 Федерального закона от 29 декабря 2006 г. № 255-ФЗ «Об обязательном социальном страховании на случай временной нетрудоспособности и в связи с материнством» (Собрание законодательства Российской Федерации, 2007, 
+№ 1, ст. 18; 2016, № 27, ст. 4183)
+</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="Всего" type="РасхВыпл1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Всего</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПосВрНетр" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Пособие по временной нетрудоспособности</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПосБеремРод" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Пособие по беременности и родам</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="Всего">
+																	<xs:annotation>
+																		<xs:documentation>Итого</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="Всего" type="РасхВыпл1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Всего</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПосВрНетр" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Пособие по временной нетрудоспособности</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ПосБеремРод" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Пособие по беременности и родам</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ЕжПосУходРеб" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Ежемесячное пособие по уходу за ребенком, всего</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ЕжПосУходРеб1" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Ежемесячное пособие по уходу за первым ребенком</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ЕжПосУходРеб2" type="РасхВыпл2Тип" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Ежемесячное пособие по уходу за вторым и последующими детьми</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="ОплДопВыхИнв" minOccurs="0">
+																				<xs:annotation>
+																					<xs:documentation>Оплата дополнительных выходных дней для ухода за детьми-инвалидами</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:attribute name="КолВыпл" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Количество дней, выплат</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:integer">
+																								<xs:totalDigits value="7"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="Расход" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Расходы, руб.</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="СВВнФУходИнв" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>Страховые взносы, исчисленные на оплату дополнительных выходных дней для ухода за детьми-инвалидами</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="ПравТариф3.1.427" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Расчет соответствия условиям применения пониженного тарифа страховых взносов плательщиками, указанными в подпункте 3 пункта 1 статьи 427 Налогового кодекса Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="СвРеестрАкОрг">
+																	<xs:annotation>
+																		<xs:documentation>Сведения из реестра аккредитованных организаций, осуществляющих деятельность в области информационных технологий</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:attribute name="ДатаЗапАкОрг" type="ДатаТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Дата записи в реестре аккредитованных организаций</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="НомЗапАкОрг" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Номер записи в реестре аккредитованных организаций</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:string">
+																					<xs:minLength value="1"/>
+																					<xs:maxLength value="18"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+															<xs:attribute name="СрЧисл_9МПр" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Средняя численность работников / среднесписочная численность работников (чел.) по итогам 9-ти месяцев года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="7"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="СрЧисл_Пер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Средняя численность работников / среднесписочная численность работников (чел.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="7"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="Дох248_9МПр" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая в соответствии со статьей 248 Налогового кодекса Российской Федерации, всего (руб.) по итогам 9-ти месяцев года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="Дох248_Пер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая в соответствии со статьей 248 Налогового кодекса Российской Федерации, всего (руб.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохКр5.427_9МПр" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая исходя из критериев, указанных в пункте 5 статьи 427 Налогового кодекса Российской Федерации (руб.) по итогам 9-ти месяцев года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохКр5.427_Пер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая исходя из критериев, указанных в пункте 5 статьи 427 Налогового кодекса Российской Федерации (руб.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДолДох5.427_9МПр" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Доля доходов, определяемая в целях применения пункта 5 статьи 427 Налогового кодекса Российской Федерации (%) по итогам 9-ти месяцев года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:decimal">
+																		<xs:totalDigits value="5"/>
+																		<xs:fractionDigits value="2"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДолДох5.427_Пер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Доля доходов, определяемая в целях применения пункта 5 статьи 427 Налогового кодекса Российской Федерации (%) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:decimal">
+																		<xs:totalDigits value="5"/>
+																		<xs:fractionDigits value="2"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="ПравТариф5.1.427" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Расчет соответствия условиям применения пониженного тарифа страховых взносов плательщиками, указанными в подпункте 5 пункта 1 статьи 427 Налогового кодекса Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:attribute name="Дох346.15Вс" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая в соответствии со статьей 346.15 Налогового кодекса Российской Федерации, всего (руб.)</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="Дох6.427" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, определяемая в целях применения пункта 6 статьи 427 Налогового кодекса Российской Федерации (руб.)</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДолДох6.427" use="required">
+																<xs:annotation>
+																	<xs:documentation>Доля доходов, определяемая в целях применения пункта 6 статьи 427 Налогового кодекса Российской Федерации (%)</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:decimal">
+																		<xs:totalDigits value="5"/>
+																		<xs:fractionDigits value="2"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="ПравТариф7.1.427" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Расчет соответствия условиям применения пониженного тарифа страховых взносов плательщиками, указанными в подпункте 7 пункта 1 статьи 427 Налогового кодекса Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:attribute name="ДохВсПред" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, всего (руб.) по итогам года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохВсПер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов, всего (руб.) по итогам текущего расчетного периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохЦелПостПред" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов в виде целевых поступлений на содержание некоммерческих организаций и ведение ими уставной деятельности, поименованной в пункте 7 статьи 427 Налогового кодекса Российской Федерации, определяемых в соответствии с пунктом 2 статьи 251 Налогового кодекса Российской Федерации (руб.) по итогам года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохЦелПостПер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов в виде целевых поступлений на содержание некоммерческих организаций и ведение ими уставной деятельности, поименованной в пункте 7 статьи 427 Налогового кодекса Российской Федерации, определяемых в соответствии с пунктом 2 статьи 251 Налогового кодекса Российской Федерации (руб.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохГрантПред" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов в виде грантов, получаемых для осуществления деятельности, поименованной в пункте 7 статьи 427 Налогового кодекса Российской Федерации, определяемых в соответствии с подпунктом 14 пункта 1 статьи 251 Налогового кодекса Российской Федерации (руб.) по итогам года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохГрантПер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов в виде грантов, получаемых для осуществления деятельности, поименованной в пункте 7 статьи 427 Налогового кодекса Российской Федерации, определяемых в соответствии с подпунктом 14 пункта 1 статьи 251 Налогового кодекса Российской Федерации (руб.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохЭкДеятПред" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов от осуществления видов экономической деятельности, указанных в доходы от осуществления видов экономической деятельности, указанных в абзацах 17 – 21 и абзацах 34 - 36 подпункта 5 пункта 1 статьи 427 Налогового кодекса Российской Федерации (руб.) по итогам года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДохЭкДеятПер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Сумма доходов от осуществления видов экономической деятельности, указанных в доходы от осуществления видов экономической деятельности, указанных в абзацах 17 – 21 и абзацах 34 – 36 подпункта 5 пункта 1 статьи 427 Налогового кодекса Российской Федерации (руб.) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:integer">
+																		<xs:totalDigits value="15"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДолДохПред" use="optional">
+																<xs:annotation>
+																	<xs:documentation>Доля доходов, определяемая в целях применения пункта 7 статьи 427 Налогового кодекса Российской Федерации (%) по итогам года, предшествующего текущему расчетному периоду</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:decimal">
+																		<xs:totalDigits value="5"/>
+																		<xs:fractionDigits value="2"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ДолДохПер" use="required">
+																<xs:annotation>
+																	<xs:documentation>Доля доходов, определяемая в целях применения пункта 7 статьи 427 Налогового кодекса Российской Федерации (%) по итогам текущего отчетного (расчетного) периода</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:decimal">
+																		<xs:totalDigits value="5"/>
+																		<xs:fractionDigits value="2"/>
+																		<xs:minInclusive value="0"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="СвПримТариф9.1.427" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Сведения, необходимые для применения пониженного тарифа страховых взносов плательщиками, указанными в подпункте 9 пункта 1 статьи 427 Налогового кодекса Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ВыплатИт" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Итого выплат</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="СведПатент" maxOccurs="unbounded">
+																	<xs:annotation>
+																		<xs:documentation>Сведения о патенте</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="СумВыплат" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сведения о суммах выплат</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="НомПатент" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Номер патента</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:string">
+																					<xs:minLength value="1"/>
+																					<xs:maxLength value="20"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ВидДеятПатент" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Код вида предпринимательской деятельности, установленный законодательством субъекта Российской Федерации, указанный в заявлении на получение патента</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:string">
+																					<xs:length value="6"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ДатаНачДейст" type="ДатаТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Дата начала действия</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="ДатаКонДейст" type="ДатаТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Дата окончания действия</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="СвПримТариф2.2.425" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Сведения, необходимые для применения тарифа страховых взносов, установленного абзацем вторым подпункта 2 пункта 2 статьи 425 (абзацем вторым подпункта 2 статьи 426) Налогового кодекса Российской Федерации</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ВыплатИт" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Итого выплат</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="СвИноГражд" maxOccurs="unbounded">
+																	<xs:annotation>
+																		<xs:documentation>Сведения об иностранных гражданах, лицах без гражданства</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="ФИО" type="ФИОТип">
+																				<xs:annotation>
+																					<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="СумВыплат" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма выплат</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="ИННФЛ" type="ИННФЛТип" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>ИНН</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="СНИЛС" type="СНИЛСТип" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>СНИЛС</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="Гражд" type="ОКСМТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Гражданство (код страны)</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="СвПримТариф1.3.422" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Сведения, необходимые для применения положений подпункта 1 пункта 3 статьи 422 Налогового кодекса Российской Федерации организациями, осуществляющими выплаты и иные вознаграждения в пользу обучающихся в профессиональных образовательных организациях, образовательных организациях высшего образования по очной форме обучения за деятельность, осуществляемую в студенческом отряде (включенном в федеральный или региональный реестр молодежных и детских объединений, пользующихся государственной поддержкой) по трудовым договорам или по гражданско-правовым договорам, предметом которых являются выполнение работ и (или) оказание услуг</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ВыплатИт" type="СвСум1Тип">
+																	<xs:annotation>
+																		<xs:documentation>Итого выплат</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="СведОбуч" maxOccurs="unbounded">
+																	<xs:annotation>
+																		<xs:documentation>Сведения об обучающихся</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="ФИО" type="ФИОТип">
+																				<xs:annotation>
+																					<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:choice>
+																				<xs:element name="СправСтудОтряд" type="СправТип">
+																					<xs:annotation>
+																						<xs:documentation>Сведения из справки, подтверждающие членство в студенческом отряде</xs:documentation>
+																					</xs:annotation>
+																				</xs:element>
+																				<xs:element name="СправФормОбуч" type="СправТип">
+																					<xs:annotation>
+																						<xs:documentation>Сведения из справки, подтверждающие очную форму обучения</xs:documentation>
+																					</xs:annotation>
+																				</xs:element>
+																			</xs:choice>
+																			<xs:element name="СумВыплат" type="СвСум1Тип">
+																				<xs:annotation>
+																					<xs:documentation>Сумма выплат</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																			<xs:element name="СвРеестрМДО" maxOccurs="unbounded">
+																				<xs:annotation>
+																					<xs:documentation>Сведения из реестра молодежных и детских объединений, пользующихся государственной поддержкой</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:attribute name="НаимМДО" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Наименование молодежного и детского объединения, пользующегося государственной поддержкой</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:minLength value="1"/>
+																								<xs:maxLength value="1000"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="ДатаЗапис" type="ДатаТип" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Дата записи в реестре</xs:documentation>
+																						</xs:annotation>
+																					</xs:attribute>
+																					<xs:attribute name="НомерЗапис" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Номер записи в реестре</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:minLength value="1"/>
+																								<xs:maxLength value="28"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="УникНомер" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Уникальный номер</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:string">
+																					<xs:minLength value="1"/>
+																					<xs:maxLength value="3"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+												<xs:attribute name="ОКТМО" type="ОКТМОТип" use="required">
+													<xs:annotation>
+														<xs:documentation>Код по ОКТМО</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="ОбязПлатСВ_КФХ" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Сводные данные об обязательствах плательщиков страховых взносов - глав крестьянских (фермерских) хозяйств</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="УплПерОПС" type="СумСВУплТип">
+														<xs:annotation>
+															<xs:documentation>Суммы страховых взносов на обязательное пенсионное страхование, подлежащие уплате за расчетный период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="УплПерОМС" type="СумСВУплТип">
+														<xs:annotation>
+															<xs:documentation>Суммы страховых взносов на обязательное медицинское страхование, подлежащие уплате за расчетный период</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="РасчСВ_КФХ">
+														<xs:annotation>
+															<xs:documentation>Расчет сумм страховых взносов, подлежащих уплате за главу и членов крестьянского (фермерского) хозяйства</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="СведЧлКФХ" maxOccurs="unbounded">
+																	<xs:annotation>
+																		<xs:documentation>Сведения о члене крестьянского (фермерского) хозяйства</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="ФИО" type="ФИОТип">
+																				<xs:annotation>
+																					<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+																				</xs:annotation>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="ИННФЛ" type="ИННФЛТип" use="optional">
+																			<xs:annotation>
+																				<xs:documentation>ИНН</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="СНИЛС" type="СНИЛСТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>СНИЛС</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="ГодРожд" type="xs:gYear" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Год рождения</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="ДатаНачЧлКФХ" type="ДатаТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Дата начала периода членства в крестьянском (фермерском) хозяйстве в расчетный период</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="ДатаКонЧлКФХ" type="ДатаТип" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Дата окончания периода членства в крестьянском (фермерском) хозяйстве в расчетный период</xs:documentation>
+																			</xs:annotation>
+																		</xs:attribute>
+																		<xs:attribute name="НачислСВОПС" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Исчислено страховых взносов на обязательное пенсионное страхование</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="НачислСВОМС" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Исчислено страховых взносов на обязательное медицинское страхование</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+												<xs:attribute name="ОКТМО" type="ОКТМОТип" use="required">
+													<xs:annotation>
+														<xs:documentation>Код по ОКТМО</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="ПерсСвСтрахЛиц" minOccurs="0" maxOccurs="unbounded">
+											<xs:annotation>
+												<xs:documentation>Персонифицированные сведения о застрахованных лицах</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="ДанФЛПолуч">
+														<xs:annotation>
+															<xs:documentation>Данные о физическом лице - получателе дохода</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ФИО" type="ФИОТип">
+																	<xs:annotation>
+																		<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+															<xs:attribute name="ИННФЛ" type="ИННФЛТип" use="optional">
+																<xs:annotation>
+																	<xs:documentation>ИНН</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+															<xs:attribute name="СНИЛС" type="СНИЛСТип" use="required">
+																<xs:annotation>
+																	<xs:documentation>СНИЛС</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+															<xs:attribute name="ДатаРожд" use="required">
+																<xs:annotation>
+																	<xs:documentation>Дата рождения</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="ДатаТип"/>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="Гражд" type="ОКСМТип" use="required">
+																<xs:annotation>
+																	<xs:documentation>Гражданство (код страны)</xs:documentation>
+																</xs:annotation>
+															</xs:attribute>
+															<xs:attribute name="Пол" use="required">
+																<xs:annotation>
+																	<xs:documentation>Пол</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="КодВидДок" use="required">
+																<xs:annotation>
+																	<xs:documentation>Код вида документа, удостоверяющего личность</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="СПДУЛТип"/>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="СерНомДок" use="required">
+																<xs:annotation>
+																	<xs:documentation>Серия и номер документа, удостоверяющего личность</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:minLength value="1"/>
+																		<xs:maxLength value="25"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ПризОПС" use="required">
+																<xs:annotation>
+																	<xs:documentation>Признак застрахованного лица в системе обязательного пенсионного страхования</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ПризОМС" use="required">
+																<xs:annotation>
+																	<xs:documentation>Признак застрахованного лица в системе обязательного медицинского страхования</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="ПризОСС" use="required">
+																<xs:annotation>
+																	<xs:documentation>Признак застрахованного лица в системе обязательного социального страхования</xs:documentation>
+																</xs:annotation>
+																<xs:simpleType>
+																	<xs:restriction base="xs:string">
+																		<xs:length value="1"/>
+																		<xs:enumeration value="1"/>
+																		<xs:enumeration value="2"/>
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="СвВыплСВОПС" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Сведения о сумме выплат и иных вознаграждений, начисленных в пользу физического лица, а также сведения о исчисленных страховых взносах на обязательное пенсионное страхование</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="СвВыпл">
+																	<xs:annotation>
+																		<xs:documentation>Сведения о сумме выплат и иных вознаграждений, начисленных в пользу физического лица</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="СвВыплМК" maxOccurs="unbounded">
+																				<xs:annotation>
+																					<xs:documentation>Сведения о сумме выплат и иных вознаграждений, начисленных в пользу физического лица, по месяцу и коду категории застрахованного лица</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:attribute name="Месяц" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Месяц</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="2"/>
+																								<xs:enumeration value="01"/>
+																								<xs:enumeration value="02"/>
+																								<xs:enumeration value="03"/>
+																								<xs:enumeration value="04"/>
+																								<xs:enumeration value="05"/>
+																								<xs:enumeration value="06"/>
+																								<xs:enumeration value="07"/>
+																								<xs:enumeration value="08"/>
+																								<xs:enumeration value="09"/>
+																								<xs:enumeration value="10"/>
+																								<xs:enumeration value="11"/>
+																								<xs:enumeration value="12"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="КодКатЛиц" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Код категории застрахованного лица</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:minLength value="2"/>
+																								<xs:maxLength value="4"/>
+																								<xs:pattern value="[А-Я]{2,4}"/>
+																								<xs:enumeration value="КРС"/>
+																								<xs:enumeration value="ХО"/>
+																								<xs:enumeration value="ТВЭЗ"/>
+																								<xs:enumeration value="ОДИТ"/>
+																								<xs:enumeration value="ИЦС"/>
+																								<xs:enumeration value="НР"/>
+																								<xs:enumeration value="АСБ"/>
+																								<xs:enumeration value="ЧЭС"/>
+																								<xs:enumeration value="ПНЭД"/>
+																								<xs:enumeration value="ТОР"/>
+																								<xs:enumeration value="СПВЛ"/>
+																								<xs:enumeration value="ВЖНР"/>
+																								<xs:enumeration value="ВЖХО"/>
+																								<xs:enumeration value="ВЖТЗ"/>
+																								<xs:enumeration value="ВЖИТ"/>
+																								<xs:enumeration value="ВЖЦС"/>
+																								<xs:enumeration value="ВЖСБ"/>
+																								<xs:enumeration value="ВЖЭС"/>
+																								<xs:enumeration value="ВЖЭД"/>
+																								<xs:enumeration value="ВЖКС"/>
+																								<xs:enumeration value="ВЖТР"/>
+																								<xs:enumeration value="ВЖВЛ"/>
+																								<xs:enumeration value="ВПНР"/>
+																								<xs:enumeration value="ВПХО"/>
+																								<xs:enumeration value="ВПТЗ"/>
+																								<xs:enumeration value="ВПИТ"/>
+																								<xs:enumeration value="ВПЦС"/>
+																								<xs:enumeration value="ВПСБ"/>
+																								<xs:enumeration value="ВПВЛ"/>
+																								<xs:enumeration value="ВПЭС"/>
+																								<xs:enumeration value="ВПЭД"/>
+																								<xs:enumeration value="ВПКС"/>
+																								<xs:enumeration value="ВПТР"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="СумВыпл" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Сумма выплат и иных вознаграждений</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="ВыплОПС" use="optional">
+																						<xs:annotation>
+																							<xs:documentation>База для исчисления страховых взносов на обязательное пенсионное страхование в пределах предельной величины</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="ВыплОПСДог" use="optional">
+																						<xs:annotation>
+																							<xs:documentation>База для исчисления страховых взносов на обязательное пенсионное страхование в пределах предельной величины, в том числе по гражданско-правовым договорам</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="НачислСВ" use="optional">
+																						<xs:annotation>
+																							<xs:documentation>Сумма исчисленных страховых взносов с базы исчисления страховых взносов, не превышающих предельную величину</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="СумВыплВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Сумма выплат и иных вознаграждений всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ВыплОПСВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>База для исчисления страховых взносов на обязательное пенсионное страхование в пределах предельной величины всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="ВыплОПСДогВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>База для исчисления страховых взносов на обязательное пенсионное страхование в пределах предельной величины, в том числе по гражданско-правовым договорам, всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="НачислСВВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Сумма исчисленных страховых взносов с базы исчисления страховых взносов, не превышающих предельную величину всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+																<xs:element name="ВыплСВДоп" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Сведения о сумме выплат и иных вознаграждений, начисленных в пользу физического лица, на которые исчислены страховые взносы по дополнительному тарифу</xs:documentation>
+																	</xs:annotation>
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element name="ВыплСВДопМТ" maxOccurs="unbounded">
+																				<xs:annotation>
+																					<xs:documentation>Сведения о сумме выплат и иных вознаграждений, исчисленных в пользу физического лица, на которые исчислены страховые взносы по дополнительному тарифу, по месяцу и коду тарифа</xs:documentation>
+																				</xs:annotation>
+																				<xs:complexType>
+																					<xs:attribute name="Месяц" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Месяц</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="2"/>
+																								<xs:enumeration value="01"/>
+																								<xs:enumeration value="02"/>
+																								<xs:enumeration value="03"/>
+																								<xs:enumeration value="04"/>
+																								<xs:enumeration value="05"/>
+																								<xs:enumeration value="06"/>
+																								<xs:enumeration value="07"/>
+																								<xs:enumeration value="08"/>
+																								<xs:enumeration value="09"/>
+																								<xs:enumeration value="10"/>
+																								<xs:enumeration value="11"/>
+																								<xs:enumeration value="12"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="Тариф" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Код тарифа</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:string">
+																								<xs:length value="2"/>
+																								<xs:enumeration value="21"/>
+																								<xs:enumeration value="22"/>
+																								<xs:enumeration value="23"/>
+																								<xs:enumeration value="24"/>
+																								<xs:enumeration value="25"/>
+																								<xs:enumeration value="26"/>
+																								<xs:enumeration value="27"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="ВыплСВ" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Сумма выплат и иных вознаграждений, на которые исчислены страховые взносы</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																					<xs:attribute name="НачислСВ" use="required">
+																						<xs:annotation>
+																							<xs:documentation>Сумма исчисленных страховых взносов</xs:documentation>
+																						</xs:annotation>
+																						<xs:simpleType>
+																							<xs:restriction base="xs:decimal">
+																								<xs:totalDigits value="17"/>
+																								<xs:fractionDigits value="2"/>
+																								<xs:minInclusive value="0"/>
+																							</xs:restriction>
+																						</xs:simpleType>
+																					</xs:attribute>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																		<xs:attribute name="ВыплСВВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Сумма выплат и иных вознаграждений, на которые исчислены страховые взносы, всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																		<xs:attribute name="НачислСВВс3" use="required">
+																			<xs:annotation>
+																				<xs:documentation>Сумма исчисленных страховых взносов всего за последние три месяца расчетного (отчетного) периода</xs:documentation>
+																			</xs:annotation>
+																			<xs:simpleType>
+																				<xs:restriction base="xs:decimal">
+																					<xs:totalDigits value="17"/>
+																					<xs:fractionDigits value="2"/>
+																					<xs:minInclusive value="0"/>
+																				</xs:restriction>
+																			</xs:simpleType>
+																		</xs:attribute>
+																	</xs:complexType>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+												<xs:attribute name="НомКорр" use="required">
+													<xs:annotation>
+														<xs:documentation>Номер корректировки</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:integer">
+															<xs:totalDigits value="3"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="Период" use="required">
+													<xs:annotation>
+														<xs:documentation>Расчетный (отчетный) период (код)</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:string">
+															<xs:length value="2"/>
+															<xs:enumeration value="21"/>
+															<xs:enumeration value="31"/>
+															<xs:enumeration value="33"/>
+															<xs:enumeration value="34"/>
+															<xs:enumeration value="51"/>
+															<xs:enumeration value="52"/>
+															<xs:enumeration value="53"/>
+															<xs:enumeration value="90"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="ОтчетГод" type="xs:gYear" use="required">
+													<xs:annotation>
+														<xs:documentation>Календарный год</xs:documentation>
+														<xs:documentation>
+Год в формате ГГГГ</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+												<xs:attribute name="Номер" use="required">
+													<xs:annotation>
+														<xs:documentation>Номер</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:integer">
+															<xs:totalDigits value="7"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+												<xs:attribute name="Дата" type="ДатаТип" use="required">
+													<xs:annotation>
+														<xs:documentation>Дата</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="КНД" use="required">
+							<xs:annotation>
+								<xs:documentation>Код формы документа по КНД</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="КНДТип">
+									<xs:enumeration value="1151111"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="ДатаДок" type="ДатаТип" use="required">
+							<xs:annotation>
+								<xs:documentation>Дата формирования документа</xs:documentation>
+								<xs:documentation>
+Дата в формате ДД.ММ.ГГГГ</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="НомКорр" use="required">
+							<xs:annotation>
+								<xs:documentation>Номер корректировки</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:totalDigits value="3"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="Период" use="required">
+							<xs:annotation>
+								<xs:documentation>Расчетный (отчетный) период (код)</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:length value="2"/>
+									<xs:enumeration value="21"/>
+									<xs:enumeration value="31"/>
+									<xs:enumeration value="33"/>
+									<xs:enumeration value="34"/>
+									<xs:enumeration value="51"/>
+									<xs:enumeration value="52"/>
+									<xs:enumeration value="53"/>
+									<xs:enumeration value="90"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="ОтчетГод" type="xs:gYear" use="required">
+							<xs:annotation>
+								<xs:documentation>Календарный год</xs:documentation>
+								<xs:documentation>
+Год в формате ГГГГ</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="КодНО" type="СОНОТип" use="required">
+							<xs:annotation>
+								<xs:documentation>Код налогового органа</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="ПоМесту" use="required">
+							<xs:annotation>
+								<xs:documentation>Код места, по которому представляется документ</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:length value="3"/>
+									<xs:enumeration value="112"/>
+									<xs:enumeration value="120"/>
+									<xs:enumeration value="121"/>
+									<xs:enumeration value="122"/>
+									<xs:enumeration value="124"/>
+									<xs:enumeration value="214"/>
+									<xs:enumeration value="217"/>
+									<xs:enumeration value="222"/>
+									<xs:enumeration value="335"/>
+									<xs:enumeration value="350"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="ИдФайл" use="required">
+				<xs:annotation>
+					<xs:documentation>Идентификатор файла</xs:documentation>
+					<xs:documentation>Содержит (повторяет) имя сформированного файла (без расширения)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="255"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="ВерсПрог" use="required">
+				<xs:annotation>
+					<xs:documentation>Версия программы, с помощью которой сформирован файл</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="40"/>
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="ВерсФорм" use="required">
+				<xs:annotation>
+					<xs:documentation>Версия формата</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="5"/>
+						<xs:enumeration value="5.01"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="СВУплПерТип">
+		<xs:annotation>
+			<xs:documentation>Суммы страховых взносов, подлежащие уплате за расчетный (отчетный) период</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="КБК" type="КБКТип" use="required">
+			<xs:annotation>
+				<xs:documentation>Код бюджетной классификации</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="СумСВУплПер" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный (отчетный) период</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="СумСВУпл1М" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма страховых взносов, подлежащая уплате за первый из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="СумСВУпл2М" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма страховых взносов, подлежащая уплате за второй из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="СумСВУпл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма страховых взносов, подлежащая уплате за третий из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="КолЛицТип">
+		<xs:annotation>
+			<xs:documentation>Сведения по количеству физических лиц</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="КолВсегоПер" use="required">
+			<xs:annotation>
+				<xs:documentation>Всего с начала расчетного периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="КолВсегоПосл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе за последние три месяца расчетного (отчетного) периода, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Кол1Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 1 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Кол2Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 2 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Кол3Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 3 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="СвСум1Тип">
+		<xs:annotation>
+			<xs:documentation>Сведения по суммам (тип 1)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="СумВсегоПер" use="required">
+			<xs:annotation>
+				<xs:documentation>Всего с начала расчетного периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="СумВсегоПосл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе за последние три месяца расчетного (отчетного) периода, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Сум1Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 1 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Сум2Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 2 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Сум3Посл3М" use="required">
+			<xs:annotation>
+				<xs:documentation>В том числе 3 месяц из последних трех месяцев расчетного (отчетного) периода</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="УплСВПревТип">
+		<xs:annotation>
+			<xs:documentation>Сумма страховых взносов, подлежащая к уплате (сумма превышения произведенных расходов над исчисленными страховыми взносами)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="Признак" use="required">
+			<xs:annotation>
+				<xs:documentation>Признак</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:length value="1"/>
+					<xs:enumeration value="1"/>
+					<xs:enumeration value="2"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Сумма" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="РасхОСС1Тип">
+		<xs:annotation>
+			<xs:documentation>Расходы по обязательному социальному страхованию (тип 1)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ЧислСлуч" use="required">
+			<xs:annotation>
+				<xs:documentation>Число случаев (получателей)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="КолВыпл" use="required">
+			<xs:annotation>
+				<xs:documentation>Количество дней, выплат, пособий</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="РасхВсего" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="РасхФинФБ" use="optional">
+			<xs:annotation>
+				<xs:documentation>Расходы за счет средств, финансируемых из федерального бюджета</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="РасхОСС2Тип">
+		<xs:annotation>
+			<xs:documentation>Расходы по обязательному социальному страхованию (тип 2)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ЧислСлуч" use="required">
+			<xs:annotation>
+				<xs:documentation>Число случаев (получателей)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="КолВыпл" use="required">
+			<xs:annotation>
+				<xs:documentation>Количество дней, выплат, пособий</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="РасхВсего" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="РасхОСС3Тип">
+		<xs:annotation>
+			<xs:documentation>Расходы по обязательному социальному страхованию (тип 3)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="КолВыпл" use="required">
+			<xs:annotation>
+				<xs:documentation>Количество дней, выплат, пособий</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="РасхВсего" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="РасхОСС4Тип">
+		<xs:annotation>
+			<xs:documentation>Расходы по обязательному социальному страхованию (тип 4)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="РасхВсего" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, всего</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="РасхФинФБ" use="optional">
+			<xs:annotation>
+				<xs:documentation>Расходы за счет средств, финансируемых из федерального бюджета</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="ВыпФинФБТип">
+		<xs:annotation>
+			<xs:documentation>Выплаты, произведенные за счет средств, финансируемых из Федерального бюджета</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Всего" type="РасхВыпл1Тип">
+				<xs:annotation>
+					<xs:documentation>Всего</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ПосВрНетр" type="РасхВыпл2Тип" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Пособие по временной нетрудоспособности</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ПосБеремРод" type="РасхВыпл2Тип" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Пособие по беременности и родам</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ЕжПосУходРеб" type="РасхВыпл2Тип" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ежемесячное пособие по уходу за ребенком, всего</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ЕжПосУходРеб1" type="РасхВыпл2Тип" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ежемесячное пособие по уходу за первым ребенком</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ЕжПосУходРеб2" type="РасхВыпл2Тип" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ежемесячное пособие по уходу за вторым и последующими детьми</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="РасхВыпл1Тип">
+		<xs:annotation>
+			<xs:documentation>Выплаты, произведенные за счет средств, финансируемых из Федерального бюджета (тип 1) </xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ЧислПолуч" use="required">
+			<xs:annotation>
+				<xs:documentation>Число получателей</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Расход" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, руб.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="РасхВыпл2Тип">
+		<xs:annotation>
+			<xs:documentation>Выплаты, произведенные за счет средств, финансируемых из Федерального бюджета  (тип 2)</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="ЧислПолуч" use="required">
+			<xs:annotation>
+				<xs:documentation>Число получателей</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="КолВыпл" use="required">
+			<xs:annotation>
+				<xs:documentation>Количество дней, выплат</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:totalDigits value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Расход" use="required">
+			<xs:annotation>
+				<xs:documentation>Расходы, руб.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="СправТип">
+		<xs:annotation>
+			<xs:documentation>Сведения из справки</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="Номер" use="required">
+			<xs:annotation>
+				<xs:documentation>Номер</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="10"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Дата" type="ДатаТип" use="required">
+			<xs:annotation>
+				<xs:documentation>Дата</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="СумСВУплТип">
+		<xs:annotation>
+			<xs:documentation>Сумма страховых взносов, подлежащие уплате за расчетный период</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="КБК" type="КБКТип" use="required">
+			<xs:annotation>
+				<xs:documentation>Код бюджетной классификации</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="СумСВУплПер" use="required">
+			<xs:annotation>
+				<xs:documentation>Сумма страховых взносов, подлежащая уплате за расчетный период</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:decimal">
+					<xs:totalDigits value="17"/>
+					<xs:fractionDigits value="2"/>
+					<xs:minInclusive value="0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="АдрРФТип">
+		<xs:annotation>
+			<xs:documentation>Адрес в Российской Федерации </xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="Индекс" use="optional">
+			<xs:annotation>
+				<xs:documentation>Почтовый индекс</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:length value="6"/>
+					<xs:pattern value="[0-9]{6}"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="КодРегион" use="required">
+			<xs:annotation>
+				<xs:documentation>Код региона</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="CCРФТип"/>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Район" use="optional">
+			<xs:annotation>
+				<xs:documentation>Район</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="50"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Город" use="optional">
+			<xs:annotation>
+				<xs:documentation>Город</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="50"/>
+					<xs:minLength value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="НаселПункт" use="optional">
+			<xs:annotation>
+				<xs:documentation>Населенный пункт (село, поселок)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="50"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Улица" use="optional">
+			<xs:annotation>
+				<xs:documentation>Улица (проспект, переулок)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="50"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Дом" use="optional">
+			<xs:annotation>
+				<xs:documentation>Номер дома (владения)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="20"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Корпус" use="optional">
+			<xs:annotation>
+				<xs:documentation>Номер корпуса (строения)</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="20"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Кварт" use="optional">
+			<xs:annotation>
+				<xs:documentation>Номер квартиры</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="20"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="ФИОТип">
+		<xs:annotation>
+			<xs:documentation>Фамилия, имя, отчество</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="Фамилия" use="required">
+			<xs:annotation>
+				<xs:documentation>Фамилия</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="60"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Имя" use="required">
+			<xs:annotation>
+				<xs:documentation>Имя</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="60"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="Отчество" use="optional">
+			<xs:annotation>
+				<xs:documentation>Отчество</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="60"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="ИННЮЛТип">
+		<xs:annotation>
+			<xs:documentation>Идентификационный номер налогоплательщика - организации</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="10"/>
+			<xs:pattern value="([0-9]{1}[1-9]{1}|[1-9]{1}[0-9]{1})[0-9]{8}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="КППТип">
+		<xs:annotation>
+			<xs:documentation>Код причины постановки на учет (КПП) - 5 и 6 знаки от 0-9 и A-Z</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="9"/>
+			<xs:pattern value="([0-9]{1}[1-9]{1}|[1-9]{1}[0-9]{1})([0-9]{2})([0-9A-Z]{2})([0-9]{3})"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ИННФЛТип">
+		<xs:annotation>
+			<xs:documentation>Идентификационный номер налогоплательщика - физического лица</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="12"/>
+			<xs:pattern value="([0-9]{1}[1-9]{1}|[1-9]{1}[0-9]{1})[0-9]{10}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="КНДТип">
+		<xs:annotation>
+			<xs:documentation>Код из Классификатора налоговой документации</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="7"/>
+			<xs:pattern value="[0-9]{7}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="СОНОТип">
+		<xs:annotation>
+			<xs:documentation>Коды из Классификатора системы обозначений налоговых органов</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="4"/>
+			<xs:pattern value="[0-9]{4}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="СПДУЛТип">
+		<xs:annotation>
+			<xs:documentation>Коды Справочника видов документов, удостоверяющих личность налогоплательщика</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="2"/>
+			<xs:pattern value="[0-9]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="СПДУЛШТип">
+		<xs:annotation>
+			<xs:documentation>Шаблон серии, номера из Справочника видов документов, удостоверяющих личность налогоплательщика</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="25"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="КБКТип">
+		<xs:annotation>
+			<xs:documentation>Код из Классификатора доходов в бюджет </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="20"/>
+			<xs:pattern value="[0-9]{20}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ОКТМОТип">
+		<xs:annotation>
+			<xs:documentation>Код из Общероссийского классификатора территорий муниципальных образований</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="8"/>
+			<xs:maxLength value="11"/>
+			<xs:pattern value="[0-9]{8}"/>
+			<xs:pattern value="[0-9]{11}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ОКСМТип">
+		<xs:annotation>
+			<xs:documentation>Код из Общероссийского классификатора стран мира</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="3"/>
+			<xs:pattern value="[0-9]{3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ОКВЭДТип">
+		<xs:annotation>
+			<xs:documentation>Код из Общероссийского классификатора видов экономической деятельности</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="8"/>
+			<xs:minLength value="2"/>
+			<xs:pattern value="[0-9]{2}"/>
+			<xs:pattern value="[0-9]{2}\.[0-9]{1}"/>
+			<xs:pattern value="[0-9]{2}\.[0-9]{2}"/>
+			<xs:pattern value="[0-9]{2}\.[0-9]{2}\.[0-9]{1}"/>
+			<xs:pattern value="[0-9]{2}\.[0-9]{2}\.[0-9]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="СНИЛСТип">
+		<xs:annotation>
+			<xs:documentation>Страховой номер индивидуального лицевого счета</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="14"/>
+			<xs:pattern value="[0-9]{3}\-[0-9]{3}\-[0-9]{3}\-[0-9]{2}"/>
+			<xs:pattern value="[0-9]{3}\-[0-9]{3}\-[0-9]{3} [0-9]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ОКВТип">
+		<xs:annotation>
+			<xs:documentation>Код из Общероссийского классификатора валют</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="3"/>
+			<xs:pattern value="[0-9]{3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CCРФТип">
+		<xs:annotation>
+			<xs:documentation>Код из Справочника субъектов Российской Федерации </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="2"/>
+			<xs:pattern value="[0-9]{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ДатаТип">
+		<xs:annotation>
+			<xs:documentation>Дата в формате ДД.ММ.ГГГГ (01.01.1900 - 31.12.2099)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="10"/>
+			<xs:pattern value="(((0[1-9]{1}|[1-2]{1}[0-9]{1})\.(0[1-9]{1}|1[0-2]{1}))|((30)\.(01|0[3-9]{1}|1[0-2]{1}))|((31)\.(01|03|05|07|08|10|12)))\.(19[0-9]{2}|20[0-9]{2})"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

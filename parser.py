@@ -1,31 +1,56 @@
+# -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError
 
 
+class CTRelation(object):
+
+    def __init__(self, name, relation_list=None):
+        super().__init__()
+
+        self.name = name
+        self.relation_list = relation_list or []
+
+    def __lt__(self, other):
+        # todo Проверить правильность условия
+        return self.name in other.relation_list
+
+
 class Parser(object):
+
+    _NS_XS = 'http://www.w3.org/2001/XMLSchema'
+
     def __init__(self, namespace=None, schema_ns='ns'):
-        super()
+        super().__init__()
 
         self.namespace = namespace
         self.schema_ns = schema_ns
 
-        self._NS_XS = 'http://www.w3.org/2001/XMLSchema'
+        self._ns_path = None
 
         self.xs_etree = None
         self.root = None
 
-    @classmethod
-    def get_tag(name, namespace=None):
-        if namespace is None:
-            namespace = self._NS_XS
+        # мапа связей complexType между собой
+        self.ct_relations = {}
 
+    @property
+    def ns_path(self):
+        return self._ns_path or self._NS_XS
+
+    def get_tag(self, name, namespace=None):
+        if namespace is None:
+            namespace = self.ns_path
         return '{{{}}}{}'.format(namespace, name)
 
+    def add_ct_relation(self, name, relation_list):
+        self.ct_relations[name] = CTRelation(name, relation_list=relation_list)
 
-    def parse_xsd(self, like_file_obj=None, from_string=None):
-        if (like_file_obj):
-            self.xs_etree = etree.parse(like_file_obj)
-        elif (from_string):
+    def parse_xsd(self, filepath=None, from_string=None, encoding=None):
+        if filepath:
+            parser = etree.XMLParser(encoding=encoding)
+            self.xs_etree = etree.parse(filepath, parser=parser)
+        elif from_string:
             self.xs_etree = etree.fromstring(from_string)
         else:
             raise XSInputError()
@@ -33,11 +58,12 @@ class Parser(object):
         self.root = self.xs_etree.getroot()
         ns_xs = self.root.nsmap.get(self.schema_ns)
         if ns_xs:
-            self._NS_XS = ns_xs
+            self._ns_path = ns_xs
 
         sorted_nodes = self.determine_sequence()
+        pass
 
-    def determine_sequence():
+    def determine_sequence(self):
         # Возвращает элементы первого уровня схемы в необходимом порядке их загрузки.
         # зависимые ноды идут последними
         # Список simpleType. обрабатываются самые первые
@@ -45,56 +71,68 @@ class Parser(object):
         # Список element. Должны обработаться после complexType и simpleType
         raw_elements = []
         # Список complexType. Последовательность определить по ct_relations
-        complex_types = []
         complex_types_map = {}
-        sorted_complex_types = []
-        ct_relations = {}
 
         for schema_node in self.root.getchildren():
             if isinstance(schema_node, etree._Comment):
                 continue
-            if schema_node.tag == self.get_tag('element')
+            if schema_node.tag == self.get_tag('element'):
                 raw_elements.append(schema_node)
             elif schema_node.tag == self.get_tag('complexType'):
-                complex_types.append(schema_node)
                 node_name = schema_node.attrib.get('name')
-                relation_container = []
-                ct_relations[node_name] = self.get_etree_relations(schema_node, container=relation_container)
+                complex_types_map[node_name] = schema_node
+
+                relation_containers = []
+                first_container = []
+                relation_containers.append(first_container)
+                self.add_ct_relation(node_name, self.get_etree_relations(schema_node, containers=relation_containers))
+
             elif schema_node.tag == self.get_tag('simpleType'):
                 simple_types.append(schema_node)
 
-        if ct_relations:
-            # todo Сортировка по порядку определения
-            pass
+        sorted_complex_types = []
+        if self.ct_relations:
+            for ct in sorted(self.ct_relations.values()):
+                sorted_ct_node = complex_types_map.get(ct.name)
+                if not sorted_ct_node:
+                    XSParserError('Internal error: ComplexType node not found by name')
+                sorted_complex_types.append(sorted_ct_node)
 
         result = simple_types + sorted_complex_types + raw_elements
         return result
 
-    def get_etree_relations(node, container=None):
-        assert container
+    def get_etree_relations(self, node, containers=None):
+        assert containers
+
+        container = []
+        containers.append(container)
 
         needed_tags = [self.get_tag('sequence'), self.get_tag('choice')]
 
         for sub_node in node.getchildren():
             if sub_node.tag in needed_tags:
-                #todo найти используемые элементы
                 for rel_element in sub_node.getchildren():
                     if rel_element.attrib.get('type'):
-                        container.append(rel_element.attrib.get('type'))
+                        for c in containers:
+                            c.append(rel_element.attrib.get('type'))
                     elif rel_element.attrib.get('name'):
-                        container.append(rel_element.attrib.get('name'))
+                        for c in containers:
+                            c.append(rel_element.attrib.get('name'))
                     else:
                         raise XSParserError('Relation type name not found')
 
-                    if rel_element.xpath(self.get_tag('complexType')):
-                        self.get_etree_relations(rel_element, container=container)
+                    if rel_element.xpath('complexType'):
+                        self.add_ct_relation(sub_node.attrib.get('name'), self.get_etree_relations(
+                            rel_element,
+                            containers=containers
+                        ))
         return container
 
 
 def main():
     parser = Parser()
-    with open('schemas.NO_NDFL6.xsd', 'r') as f
-        parser.parse_xsd(like_file_obj=f)
+    parser.parse_xsd(filepath='./schemas/NO_RASCHSV.xsd', encoding='windows-1251')
+
 
 if __name__ == '__main__':
     main()
