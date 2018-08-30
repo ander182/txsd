@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError
+from models import XSStringType
 
 
 class CTRelation(object):
@@ -12,7 +13,6 @@ class CTRelation(object):
         self.relation_list = relation_list or []
 
     def __lt__(self, other):
-        # todo Проверить правильность условия
         return self.name in other.relation_list
 
 
@@ -33,6 +33,9 @@ class Parser(object):
 
         # мапа связей complexType между собой
         self.ct_relations = {}
+
+        # мапа всех типов и элементов
+        self.main_map = {}
 
     @property
     def ns_path(self):
@@ -61,7 +64,11 @@ class Parser(object):
             self._ns_path = ns_xs
 
         sorted_nodes = self.determine_sequence()
-        pass
+
+        for primary_node in sorted_nodes:
+            if primary_node.tag == self.get_tag('simpleType'):
+                stype = self.make_simple_type(primary_node)
+                self.main_map[stype.name] = stype
 
     def determine_sequence(self):
         # Возвращает элементы первого уровня схемы в необходимом порядке их загрузки.
@@ -127,6 +134,14 @@ class Parser(object):
                             containers=containers
                         ))
         return container
+
+    def make_simple_type(self, node):
+        name = node.attrib.get('name')
+
+        for restriction in node.xpath(self.schema_ns+':restriction', namespaces=node.nsmap):
+            pass
+
+        return XSStringType()
 
 
 def main():
