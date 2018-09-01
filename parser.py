@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree
-from exceptions import XSInputError, XSParserError
-from models import XSStringType
+from exceptions import XSInputError, XSParserError, XSParserNotImplemented
+from models import XSStringType, XSIntegerType, XSDecimalType
 
 
 class CTRelation(object):
@@ -20,7 +20,7 @@ class Parser(object):
 
     _NS_XS = 'http://www.w3.org/2001/XMLSchema'
 
-    def __init__(self, namespace=None, schema_ns='ns'):
+    def __init__(self, namespace=None, schema_ns='xs'):
         super().__init__()
 
         self.namespace = namespace
@@ -67,8 +67,13 @@ class Parser(object):
 
         for primary_node in sorted_nodes:
             if primary_node.tag == self.get_tag('simpleType'):
-                stype = self.make_simple_type(primary_node)
-                self.main_map[stype.name] = stype
+                s_type = self.make_simple_type(primary_node)
+                if s_type.name is None:
+                    raise XSParserError('XSD-schema error: external simpleType not found name')
+                self.main_map[s_type.name] = s_type
+
+
+        pass
 
     def determine_sequence(self):
         # Возвращает элементы первого уровня схемы в необходимом порядке их загрузки.
@@ -101,7 +106,7 @@ class Parser(object):
         if self.ct_relations:
             for ct in sorted(self.ct_relations.values()):
                 sorted_ct_node = complex_types_map.get(ct.name)
-                if not sorted_ct_node:
+                if sorted_ct_node is None:
                     XSParserError('Internal error: ComplexType node not found by name')
                 sorted_complex_types.append(sorted_ct_node)
 
@@ -136,12 +141,71 @@ class Parser(object):
         return container
 
     def make_simple_type(self, node):
+        _xs = self.schema_ns
+
         name = node.attrib.get('name')
+        documentation = ''
+        doc = self.xpath_get(node, '{0}:annotation/{0}:documentation'.format(_xs), namespaces=node.nsmap)
+        if doc is not None:
+            documentation = doc.text
 
-        for restriction in node.xpath(self.schema_ns+':restriction', namespaces=node.nsmap):
-            pass
+        restriction = self.xpath_get(node, _xs+':restriction', namespaces=node.nsmap)
+        base = restriction.attrib.get('base')
+        if not base:
+            raise XSParserError('Internal error: restriction base not found on simpleType')
+        #todo: Оптимизировать однотипные операции
+        if base == _xs+':string':
+            s_type = XSStringType(name=name, documentation=documentation)
 
-        return XSStringType()
+            length = self.xpath_get(restriction, _xs + ':length', namespaces=node.nsmap)
+            if length is not None:
+                s_type.length = length.attrib.get('value')
+
+            max_length = self.xpath_get(restriction, _xs + ':maxLength', namespaces=node.nsmap)
+            if max_length is not None:
+                s_type.max_length = max_length.attrib.get('value')
+
+            min_length = self.xpath_get(restriction, _xs + ':minLength', namespaces=node.nsmap)
+            if min_length is not None:
+                s_type.min_length = min_length.attrib.get('value')
+
+            return s_type
+
+        if base == _xs+':integer':
+            s_type = XSIntegerType(name=name, documentation=documentation)
+
+            total_digits = self.xpath_get(restriction, _xs + ':totalDigits', namespaces=node.nsmap)
+            if total_digits is not None:
+                s_type.total_digits = total_digits.attrib.get('value')
+
+            min_inclusive = self.xpath_get(restriction, _xs + ':minInclusive', namespaces=node.nsmap)
+            if min_inclusive is not None:
+                s_type.min_inclusive = min_inclusive.attrib.get('value')
+
+            max_inclusive = self.xpath_get(restriction, _xs + ':maxInclusive', namespaces=node.nsmap)
+            if max_inclusive is not None:
+                s_type.max_inclusive = max_inclusive.attrib.get('value')
+
+            min_exclusive = self.xpath_get(restriction, _xs + ':minExclusive', namespaces=node.nsmap)
+            if min_exclusive is not None:
+                s_type.min_exclusive = min_exclusive.attrib.get('value')
+
+            max_exclusive = self.xpath_get(restriction, _xs + ':maxExclusive', namespaces=node.nsmap)
+            if max_exclusive is not None:
+                s_type.max_exclusive = max_exclusive.attrib.get('value')
+
+            return s_type
+
+        if base == _xs+':decimal':
+            s_type = XSDecimalType(name=name, documentation=documentation)
+
+
+
+        raise XSParserNotImplemented('simpleType with base="{} now is not implemented"'.format(base))
+
+    def xpath_get(self, node, path, namespaces=None):
+        for result in node.xpath(path, namespaces=namespaces):
+            return result
 
 
 def main():

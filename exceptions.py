@@ -11,3 +11,9 @@ class XSParserError(Exception):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class XSParserNotImplemented(XSParserError):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

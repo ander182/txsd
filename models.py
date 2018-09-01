@@ -30,23 +30,44 @@ class XSAttribute(object):
 
 class XSSimpleType(object):
 
-    def __init__(self):
+    def __init__(self, name=None, documentation=''):
         super().__init__()
+        self.name = name
+        self.documentation = documentation
 
 
 class XSStringType(XSSimpleType):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name=None, documentation=''):
+        super().__init__(name=name, documentation=documentation)
+        self.length = None
         self.min_length = None
         self.max_length = None
 
 
-class XSIntegerType(XSSimpleType):
+class XSBaseNumericType(XSSimpleType):
 
-    def __init__(self):
-        super().__init__()
-        self.totalDigits = None
+    def __init__(self, name=None, documentation=''):
+        super().__init__(name=name, documentation=documentation)
+        self.total_digits = None
+
+        self.min_inclusive = None
+        self.max_inclusive = None
+        self.min_exclusive = None
+        self.max_exclusive = None
+
+
+class XSIntegerType(XSBaseNumericType):
+
+    def __init__(self, name=None, documentation=''):
+        super().__init__(name=name, documentation=documentation)
+
+
+class XSDecimalType(XSBaseNumericType):
+
+    def __init__(self, name=None, documentation=''):
+        super().__init__(name=name, documentation=documentation)
+        self.fraction_digits = None
 
 
 class XSComplexType(object):
