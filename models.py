@@ -32,29 +32,38 @@ class XSSimpleType(object):
 
     def __init__(self, name=None, documentation=''):
         super().__init__()
+        self.available_restriction_map = {}
         self.name = name
         self.documentation = documentation
+
+    def init_restriction(self, field_name, key):
+        assert isinstance(field_name, str)
+        assert isinstance(key, str)
+        setattr(self, field_name, None)
+        self.available_restriction_map[key] = field_name
 
 
 class XSStringType(XSSimpleType):
 
     def __init__(self, name=None, documentation=''):
         super().__init__(name=name, documentation=documentation)
-        self.length = None
-        self.min_length = None
-        self.max_length = None
+
+        self.init_restriction('length', 'length')
+        self.init_restriction('min_length', 'minLength')
+        self.init_restriction('max_length', 'maxLength')
 
 
 class XSBaseNumericType(XSSimpleType):
 
     def __init__(self, name=None, documentation=''):
         super().__init__(name=name, documentation=documentation)
-        self.total_digits = None
 
-        self.min_inclusive = None
-        self.max_inclusive = None
-        self.min_exclusive = None
-        self.max_exclusive = None
+        self.init_restriction('total_digits', 'totalDigits')
+
+        self.init_restriction('min_inclusive', 'minInclusive')
+        self.init_restriction('max_inclusive', 'maxInclusive')
+        self.init_restriction('min_exclusive', 'minExclusive')
+        self.init_restriction('max_exclusive', 'maxExclusive')
 
 
 class XSIntegerType(XSBaseNumericType):
@@ -67,7 +76,7 @@ class XSDecimalType(XSBaseNumericType):
 
     def __init__(self, name=None, documentation=''):
         super().__init__(name=name, documentation=documentation)
-        self.fraction_digits = None
+        self.init_restriction('fraction_digits', 'fractionDigits')
 
 
 class XSComplexType(object):

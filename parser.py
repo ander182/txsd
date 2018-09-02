@@ -72,7 +72,6 @@ class Parser(object):
                     raise XSParserError('XSD-schema error: external simpleType not found name')
                 self.main_map[s_type.name] = s_type
 
-
         pass
 
     def determine_sequence(self):
@@ -153,57 +152,28 @@ class Parser(object):
         base = restriction.attrib.get('base')
         if not base:
             raise XSParserError('Internal error: restriction base not found on simpleType')
-        #todo: Оптимизировать однотипные операции
+
         if base == _xs+':string':
             s_type = XSStringType(name=name, documentation=documentation)
 
-            length = self.xpath_get(restriction, _xs + ':length', namespaces=node.nsmap)
-            if length is not None:
-                s_type.length = length.attrib.get('value')
-
-            max_length = self.xpath_get(restriction, _xs + ':maxLength', namespaces=node.nsmap)
-            if max_length is not None:
-                s_type.max_length = max_length.attrib.get('value')
-
-            min_length = self.xpath_get(restriction, _xs + ':minLength', namespaces=node.nsmap)
-            if min_length is not None:
-                s_type.min_length = min_length.attrib.get('value')
-
-            return s_type
-
-        if base == _xs+':integer':
+        elif base == _xs+':integer':
             s_type = XSIntegerType(name=name, documentation=documentation)
 
-            total_digits = self.xpath_get(restriction, _xs + ':totalDigits', namespaces=node.nsmap)
-            if total_digits is not None:
-                s_type.total_digits = total_digits.attrib.get('value')
-
-            min_inclusive = self.xpath_get(restriction, _xs + ':minInclusive', namespaces=node.nsmap)
-            if min_inclusive is not None:
-                s_type.min_inclusive = min_inclusive.attrib.get('value')
-
-            max_inclusive = self.xpath_get(restriction, _xs + ':maxInclusive', namespaces=node.nsmap)
-            if max_inclusive is not None:
-                s_type.max_inclusive = max_inclusive.attrib.get('value')
-
-            min_exclusive = self.xpath_get(restriction, _xs + ':minExclusive', namespaces=node.nsmap)
-            if min_exclusive is not None:
-                s_type.min_exclusive = min_exclusive.attrib.get('value')
-
-            max_exclusive = self.xpath_get(restriction, _xs + ':maxExclusive', namespaces=node.nsmap)
-            if max_exclusive is not None:
-                s_type.max_exclusive = max_exclusive.attrib.get('value')
-
-            return s_type
-
-        if base == _xs+':decimal':
+        elif base == _xs+':decimal':
             s_type = XSDecimalType(name=name, documentation=documentation)
 
+        else:
+            raise XSParserNotImplemented('simpleType with base="{} now is not implemented"'.format(base))
 
+        for key, field_name in s_type.available_restriction_map.items():
+            _ = self.xpath_get(restriction, _xs + ':{}'.format(key), namespaces=node.nsmap)
+            if _ is not None:
+                setattr(s_type, field_name, _.attrib.get('value'))
 
-        raise XSParserNotImplemented('simpleType with base="{} now is not implemented"'.format(base))
+        return s_type
 
-    def xpath_get(self, node, path, namespaces=None):
+    @staticmethod
+    def xpath_get(node, path, namespaces=None):
         for result in node.xpath(path, namespaces=namespaces):
             return result
 
