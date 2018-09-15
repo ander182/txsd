@@ -1,33 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-class Element(object):
-
-    def __init__(self):
-        super().__init__()
-
-        self.childs = []
-        self.multiple_childs = []
-        self.choise_childs = []
-
-        self.attributes = []
-        self.required_attributes = []
-
-        self.annotation = None
-
-
-class XSAttribute(object):
-
-    def __init__(self, name, required=False):
-        super().__init__()
-        self.name = name
-        self.required = required
-
-        self.xs_type = None
-
-        self.annotation = None
-
-
 class XSSimpleType(object):
 
     def __init__(self, name=None, documentation=''):
@@ -79,8 +52,42 @@ class XSDecimalType(XSBaseNumericType):
         self.init_restriction('fraction_digits', 'fractionDigits')
 
 
+class XSAttribute(object):
+
+    def __init__(self, name, required=False):
+        super().__init__()
+        self.name = name
+        self.required = required
+
+        self.simple_type = None
+
+        self.documentation = None
+
+
 class XSComplexType(object):
     def __init__(self, name=None):
         super().__init__()
         self.name = name
+        self.documentation = ''
+
+        self.attributes = []
+
+    def add_attribute(self, attribute):
+        assert isinstance(attribute, XSAttribute)
+        self.attributes.append(attribute)
+
+
+class Element(object):
+
+    def __init__(self):
+        super().__init__()
+
+        self.childs = []
+        self.multiple_childs = []
+        self.choise_childs = []
+
+        self.attributes = []
+        self.required_attributes = []
+
+        self.annotation = None
 

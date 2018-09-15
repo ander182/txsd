@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError, XSParserNotImplemented
-from models import XSStringType, XSIntegerType, XSDecimalType
+from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute
 
 
 class CTRelation(object):
@@ -71,7 +71,10 @@ class Parser(object):
                 if s_type.name is None:
                     raise XSParserError('XSD-schema error: external simpleType not found name')
                 self.main_map[s_type.name] = s_type
-
+            if primary_node.tag == self.get_tag('complexType'):
+                c_type = self.make_complex_type(primary_node)
+                if c_type.name is None:
+                    raise XSParserError('XSD-schema error: external complexType not found name')
         pass
 
     def determine_sequence(self):
@@ -171,6 +174,50 @@ class Parser(object):
                 setattr(s_type, field_name, _.attrib.get('value'))
 
         return s_type
+
+    def make_complex_type(self, node):
+
+        _xs = self.schema_ns
+        name = node.attrib.get('name')
+        documentation = ''
+        doc = self.xpath_get(node, '{0}:annotation/{0}:documentation'.format(_xs), namespaces=node.nsmap)
+        if doc is not None:
+            documentation = doc.text
+
+        c_type = XSComplexType(name=name)
+        c_type.documentation = documentation
+
+        for node_attribute in node.xpath('{0}:attribute'.format(_xs), namespaces=node.nsmap):
+            attr_name = node_attribute.attrib.get('name')
+            attribute = XSAttribute(
+                name=attr_name,
+                required=node_attribute.attrib.get('use') or False
+            )
+
+            s_type_name = node_attribute.attrib.get('type')
+            s_type_node = None
+            if not s_type_name:
+                s_type_node = self.xpath_get(node_attribute, '{}:simpleType'.format(_xs), namespaces=node_attribute.nsmap)
+
+            if s_type_name:
+                s_type_name = node_attribute.attrib.get('type')
+                s_type = self.main_map.get(s_type_name)
+                if s_type is not None:
+                    attribute.simple_type = s_type
+                else:
+                    raise XSParserError('Attribute {} not found simpleType {}'.format(attr_name, s_type_name))
+
+            elif s_type_node:
+                s_type = self.make_simple_type(s_type_node)
+                if s_type is not None:
+                    attribute.simple_type = s_type
+                else:
+                    raise XSParserError('Attribute {} contains broken simpleType'.format(attr_name))
+            else:
+                raise XSParserError('XSD-schema error: xs_attribute {} not found simpleType'.format(attr_name))
+            c_type.add_attribute(attribute)
+
+        return c_type
 
     @staticmethod
     def xpath_get(node, path, namespaces=None):
