@@ -6,14 +6,18 @@ class XSSimpleType(object):
     def __init__(self, name=None, documentation=''):
         super().__init__()
         self.available_restriction_map = {}
+        self.multiple_fields = []
+
         self.name = name
         self.documentation = documentation
 
-    def init_restriction(self, field_name, key):
+    def init_restriction(self, field_name, key, multiple=False):
         assert isinstance(field_name, str)
         assert isinstance(key, str)
-        setattr(self, field_name, None)
+        setattr(self, field_name, [] if multiple else None)
         self.available_restriction_map[key] = field_name
+        if multiple:
+            self.multiple_fields.append(field_name)
 
 
 class XSStringType(XSSimpleType):
@@ -24,6 +28,7 @@ class XSStringType(XSSimpleType):
         self.init_restriction('length', 'length')
         self.init_restriction('min_length', 'minLength')
         self.init_restriction('max_length', 'maxLength')
+        self.init_restriction('enumeration', 'enumeration', multiple=True)
 
 
 class XSBaseNumericType(XSSimpleType):
@@ -72,22 +77,25 @@ class XSComplexType(object):
 
         self.attributes = []
 
+        self.sequence = []
+        self.choice = []
+
     def add_attribute(self, attribute):
         assert isinstance(attribute, XSAttribute)
         self.attributes.append(attribute)
 
 
-class Element(object):
+class XSElement(object):
 
-    def __init__(self):
+    def __init__(self, name=None):
         super().__init__()
 
-        self.childs = []
-        self.multiple_childs = []
-        self.choise_childs = []
+        self.name = name
+        self.documentation = ''
 
-        self.attributes = []
-        self.required_attributes = []
+        self.min_occurs = 1
+        # 0 == infinity in max_occurs
+        self.max_occurs = 1
 
-        self.annotation = None
+        self.complex_type = None
 

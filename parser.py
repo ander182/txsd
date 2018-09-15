@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError, XSParserNotImplemented
-from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute
+from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement
 
 
 class CTRelation(object):
@@ -36,6 +36,9 @@ class Parser(object):
 
         # мапа всех типов и элементов
         self.main_map = {}
+
+        # объекты, которые должны превратится в итоговые классы
+        self.external_objects = []
 
     @property
     def ns_path(self):
@@ -75,6 +78,7 @@ class Parser(object):
                 c_type = self.make_complex_type(primary_node)
                 if c_type.name is None:
                     raise XSParserError('XSD-schema error: external complexType not found name')
+                self.main_map[c_type.name] = c_type
         pass
 
     def determine_sequence(self):
@@ -165,17 +169,25 @@ class Parser(object):
         elif base == _xs+':decimal':
             s_type = XSDecimalType(name=name, documentation=documentation)
 
+        elif self.main_map.get(base):
+            s_type = self.main_map.get(base)
+
         else:
             raise XSParserNotImplemented('simpleType with base="{} now is not implemented"'.format(base))
 
         for key, field_name in s_type.available_restriction_map.items():
-            _ = self.xpath_get(restriction, _xs + ':{}'.format(key), namespaces=node.nsmap)
-            if _ is not None:
-                setattr(s_type, field_name, _.attrib.get('value'))
+            if field_name in s_type.multiple_fields:
+                container = getattr(s_type, field_name, default=[])
+                for param in restriction.xpath(_xs + ':{}'.format(key), namespaces=restriction.nsmap):
+                    container.append(param.attrib.get('value'))
+            else:
+                _ = self.xpath_get(restriction, _xs + ':{}'.format(key), namespaces=node.nsmap)
+                if _ is not None:
+                    setattr(s_type, field_name, _.attrib.get('value'))
 
         return s_type
 
-    def make_complex_type(self, node):
+    def make_complex_type(self, node, as_external=False):
 
         _xs = self.schema_ns
         name = node.attrib.get('name')
@@ -191,7 +203,7 @@ class Parser(object):
             attr_name = node_attribute.attrib.get('name')
             attribute = XSAttribute(
                 name=attr_name,
-                required=node_attribute.attrib.get('use') or False
+                required=node_attribute.attrib.get('use') == 'required'
             )
 
             s_type_name = node_attribute.attrib.get('type')
@@ -217,7 +229,41 @@ class Parser(object):
                 raise XSParserError('XSD-schema error: xs_attribute {} not found simpleType'.format(attr_name))
             c_type.add_attribute(attribute)
 
+        node_sequence = self.xpath_get(node, '{}:sequence'.format(_xs), namespaces=node.nsmap)
+        if node_sequence is not None:
+            for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
+                seq_el = self.make_element(node_el, as_external=as_external)
+                self.main_map[seq_el.name] = seq_el
+                if as_external:
+                    self.external_objects.append(seq_el)
+                c_type.sequence.append(seq_el)
+
+        node_choice = self.xpath_get(node, '{}:choice'.format(_xs), namespaces=node.nsmap)
+        if node_choice is not None:
+            for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
+                choice_el = self.make_element(node_el, as_external=as_external)
+                self.main_map[choice_el.name] = choice_el
+                if as_external:
+                    self.external_objects.append(choice_el)
+                c_type.choice.append(choice_el)
+
         return c_type
+
+    def make_element(self, node, as_external=False):
+
+        _xs = self.schema_ns
+        name = node.attrib.get('name')
+        documentation = ''
+        doc = self.xpath_get(node, '{0}:annotation/{0}:documentation'.format(_xs), namespaces=node.nsmap)
+        if doc is not None:
+            documentation = doc.text
+
+        el = XSElement(name=name)
+        el.documentation = documentation
+
+        #todo element parse
+
+        return el
 
     @staticmethod
     def xpath_get(node, path, namespaces=None):
