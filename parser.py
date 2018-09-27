@@ -72,13 +72,19 @@ class Parser(object):
             if primary_node.tag == self.get_tag('simpleType'):
                 s_type = self.make_simple_type(primary_node)
                 if s_type.name is None:
-                    raise XSParserError('XSD-schema error: external simpleType not found name')
+                    raise XSParserError('XSD-schema error: external xs:simpleType not found name')
                 self.main_map[s_type.name] = s_type
             if primary_node.tag == self.get_tag('complexType'):
                 c_type = self.make_complex_type(primary_node)
                 if c_type.name is None:
-                    raise XSParserError('XSD-schema error: external complexType not found name')
+                    raise XSParserError('XSD-schema error: external xs:complexType not found name')
                 self.main_map[c_type.name] = c_type
+            if primary_node.tag == self.get_tag('element'):
+                element = self.make_element(primary_node, as_external=True)
+                if element.name is None:
+                    raise XSParserError('XSD-schema error: external xs:element not found name')
+                self.main_map[element.name] = element
+                self.external_objects.append(element)
         pass
 
     def determine_sequence(self):
@@ -169,6 +175,8 @@ class Parser(object):
         elif base == _xs+':decimal':
             s_type = XSDecimalType(name=name, documentation=documentation)
 
+
+
         elif self.main_map.get(base):
             s_type = self.main_map.get(base)
 
@@ -177,7 +185,7 @@ class Parser(object):
 
         for key, field_name in s_type.available_restriction_map.items():
             if field_name in s_type.multiple_fields:
-                container = getattr(s_type, field_name, default=[])
+                container = getattr(s_type, field_name, [])
                 for param in restriction.xpath(_xs + ':{}'.format(key), namespaces=restriction.nsmap):
                     container.append(param.attrib.get('value'))
             else:
@@ -261,7 +269,27 @@ class Parser(object):
         el = XSElement(name=name)
         el.documentation = documentation
 
-        #todo element parse
+        min_occurs = node.attrib.get('minOccurs')
+        if min_occurs:
+            el.min_occurs = int(min_occurs)
+        max_occurs = node.attrib.get('maxOccurs')
+        if max_occurs:
+            el.max_occurs = 0 if max_occurs == 'unbounded' else int(max_occurs)
+
+        ttype = node.attrib.get('type')
+        if ttype:
+            complex_type = self.main_map.get(ttype)
+            if complex_type:
+                el.complex_type = complex_type
+            else:
+                raise XSParserError('type {} not found for element {}'.format(ttype, name))
+
+        #todo element "base" attribute not implemented
+
+        else:
+            child_ctype_node = self.xpath_get(node, '{}:complexType'.format(_xs), namespaces=node.nsmap)
+            if child_ctype_node:
+                el.complex_type = self.make_complex_type(child_ctype_node, as_external=as_external)
 
         return el
 
