@@ -5,15 +5,64 @@ from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XS
 
 
 class CTRelation(object):
-
+    u""" Объект хранящий в себе связи одного complexType с другими """
     def __init__(self, name, relation_list=None):
         super().__init__()
 
         self.name = name
         self.relation_list = relation_list or []
 
-    def __lt__(self, other):
-        return self.name in other.relation_list
+
+def ct_sorted(ct_relation_dict):
+    u""" Функция принимает словарь {"название": СTRelation}. Возвращает отсортированный список CTRelation.
+      Гарантируется что элемент будет находится после связаных с ним элементов.
+      """
+    result_names = []
+    ct_relation_list = ct_relation_dict.values()
+    current_step = ct_relation_list
+    _round = 0
+    while True:
+        for_next_step = []
+        for ct_relation in current_step:
+            if not len(ct_relation.relation_list):
+                result_names.insert(0, ct_relation.name)
+            else:
+                indexes = []
+                for rel in ct_relation.relation_list:
+                    try:
+                        indexes.append(result_names.index(rel))
+                    except ValueError:
+                        for_next_step.append(ct_relation)
+                        break
+                if not len(indexes):
+                    continue
+                result_names.insert(max(indexes)+1, ct_relation.name)
+        if _round and not _round % 10:
+            print('Internal warning: Sorting of complexTypes passed through {} rounds'.format(_round))
+        if _round > 1000:
+            raise XSParserError('complexType relation deadlock found.')
+        if len(for_next_step):
+            current_step = for_next_step
+            _round += 1
+        else:
+            break
+    return map(lambda x: ct_relation_dict.get(x), result_names)
+
+
+class MainMap(object):
+
+    def __init__(self):
+        super().__init__()
+        self.mm = {}
+
+    def set(self, name, element):
+        self.mm[name] = element
+
+    def get(self, name):
+        result = self.mm.get(name)
+        if not result and name.startswith('xs:'):
+            result = XSStringType(name=name)
+        return result
 
 
 class Parser(object):
@@ -35,7 +84,7 @@ class Parser(object):
         self.ct_relations = {}
 
         # мапа всех типов и элементов
-        self.main_map = {}
+        self.main_map = MainMap()
 
         # объекты, которые должны превратится в итоговые классы
         self.external_objects = []
@@ -73,19 +122,19 @@ class Parser(object):
                 s_type = self.make_simple_type(primary_node)
                 if s_type.name is None:
                     raise XSParserError('XSD-schema error: external xs:simpleType not found name')
-                self.main_map[s_type.name] = s_type
+                self.main_map.set(s_type.name, s_type)
             if primary_node.tag == self.get_tag('complexType'):
                 c_type = self.make_complex_type(primary_node)
                 if c_type.name is None:
                     raise XSParserError('XSD-schema error: external xs:complexType not found name')
-                self.main_map[c_type.name] = c_type
+                self.main_map.set(c_type.name, c_type)
             if primary_node.tag == self.get_tag('element'):
                 element = self.make_element(primary_node, as_external=True)
                 if element.name is None:
                     raise XSParserError('XSD-schema error: external xs:element not found name')
-                self.main_map[element.name] = element
+                self.main_map.set(element.name, element)
                 self.external_objects.append(element)
-        pass
+
 
     def determine_sequence(self):
         # Возвращает элементы первого уровня схемы в необходимом порядке их загрузки.
@@ -116,7 +165,7 @@ class Parser(object):
 
         sorted_complex_types = []
         if self.ct_relations:
-            for ct in sorted(self.ct_relations.values()):
+            for ct in ct_sorted(self.ct_relations):
                 sorted_ct_node = complex_types_map.get(ct.name)
                 if sorted_ct_node is None:
                     XSParserError('Internal error: ComplexType node not found by name')
@@ -175,8 +224,6 @@ class Parser(object):
         elif base == _xs+':decimal':
             s_type = XSDecimalType(name=name, documentation=documentation)
 
-
-
         elif self.main_map.get(base):
             s_type = self.main_map.get(base)
 
@@ -227,7 +274,7 @@ class Parser(object):
                 else:
                     raise XSParserError('Attribute {} not found simpleType {}'.format(attr_name, s_type_name))
 
-            elif s_type_node:
+            elif s_type_node is not None:
                 s_type = self.make_simple_type(s_type_node)
                 if s_type is not None:
                     attribute.simple_type = s_type
@@ -241,7 +288,7 @@ class Parser(object):
         if node_sequence is not None:
             for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
                 seq_el = self.make_element(node_el, as_external=as_external)
-                self.main_map[seq_el.name] = seq_el
+                self.main_map.set(seq_el.name, seq_el)
                 if as_external:
                     self.external_objects.append(seq_el)
                 c_type.sequence.append(seq_el)
@@ -250,7 +297,7 @@ class Parser(object):
         if node_choice is not None:
             for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
                 choice_el = self.make_element(node_el, as_external=as_external)
-                self.main_map[choice_el.name] = choice_el
+                self.main_map.set(choice_el.name, choice_el)
                 if as_external:
                     self.external_objects.append(choice_el)
                 c_type.choice.append(choice_el)
@@ -288,7 +335,7 @@ class Parser(object):
 
         else:
             child_ctype_node = self.xpath_get(node, '{}:complexType'.format(_xs), namespaces=node.nsmap)
-            if child_ctype_node:
+            if child_ctype_node is not None:
                 el.complex_type = self.make_complex_type(child_ctype_node, as_external=as_external)
 
         return el
