@@ -1,4 +1,7 @@
 # coding:utf-8
+import copy
+
+from models import XSElement
 
 
 class TranslitMixin(object):
@@ -60,8 +63,9 @@ class PyCreator(object):
     def make(self, result_file):
         result_file.write(self.get_header())
         for xs_element in self.xs_elements:
-            cls_builder = ClassBuilder(xs_element)
-            result_file.write(cls_builder.build_cls())
+            if not xs_element.complex_type.name:
+                cls_builder = ClassBuilder(xs_element)
+                result_file.write(cls_builder.build_cls())
 
 
 class ClassBuilder(TranslitMixin):
@@ -89,15 +93,16 @@ class ClassBuilder(TranslitMixin):
         return _
 
     @staticmethod
-    def add_level(row, level=0):
+    def add_row(row, level=0):
         return '    '*level + row + '\n'
 
     def build_cls(self):
         result = ''
 
         class_name = self.translit(self.el.name)
-        result += 'class {}(object):\n'.format(class_name)
+        result += 'class {}(object):\n\n'.format(class_name)
         result += self.build_init()
+        result += self.build_setters()
 
         result += '\n'
         return result
@@ -106,9 +111,26 @@ class ClassBuilder(TranslitMixin):
         raw_params = self.all_names
         trans_params = raw_params.values()
         params_list = ['{}=None'.format(param) for param in trans_params]
-        result = self.add_level('def __init__(self, {}):'.format(', '.join(params_list)), level=1)
+        result = self.add_row('def __init__(self, {}):'.format(', '.join(params_list)), level=1)
         for param in trans_params:
-            result += self.add_level('self.{0} = {0}'.format(param), level=2)
+            result += self.add_row('self.{0} = {0}'.format(param), level=2)
         result += '\n'
 
+        return result
+
+    def build_setters(self):
+        result = ''
+        for param in (self.el.complex_type.attributes + self.el.complex_type.sequence):
+            result += self.add_row('def set_{}(self, value=None):'.format(self.all_names.get(param.name)), 1)
+            result += self.add_row('self.{} = value'.format(self.all_names.get(param.name)), 2)
+            result += '\n'
+
+        for choice in self.el.complex_type.choice:
+            result += self.add_row('def set_{}(self, value=None):'.format(self.all_names.get(choice.name)), 1)
+            result += self.add_row('self.{} = value'.format(self.all_names.get(choice.name)), 2)
+            other_choices = filter(lambda x: x.name != choice.name, copy.deepcopy(self.el.complex_type.choice))
+            result += self.add_row('if value:', 2)
+            for choice_to_clear in other_choices:
+                result += self.add_row('self.{} = None'.format(self.all_names.get(choice_to_clear.name)), 3)
+            result += '\n'
         return result
