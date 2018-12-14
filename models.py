@@ -99,3 +99,15 @@ class XSElement(object):
 
         self.complex_type = None
 
+    @property
+    def attributes(self):
+        return self.complex_type.attributes if self.complex_type else []
+
+    @property
+    def sequence(self):
+        return self.complex_type.sequence if self.complex_type else []
+
+    @property
+    def choice(self):
+        return self.complex_type.choice if self.complex_type else []
+

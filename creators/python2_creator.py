@@ -75,13 +75,13 @@ class ClassBuilder(TranslitMixin):
         self.el = el
 
         self.attrib_names = {}
-        for attrib in el.complex_type.attributes:
+        for attrib in el.attributes:
             self.attrib_names[attrib.name] = self.translit(attrib.name)
         self.sequence_names = {}
-        for seq in el.complex_type.sequence:
+        for seq in el.sequence:
             self.sequence_names[seq.name] = self.translit(seq.name)
         self.choice_names = {}
-        for choice in el.complex_type.choice:
+        for choice in el.choice:
             self.choice_names[choice.name] = self.translit(choice.name)
 
     @property
@@ -108,24 +108,41 @@ class ClassBuilder(TranslitMixin):
         return result
 
     def build_init(self):
-        raw_params = self.all_names
-        trans_params = raw_params.values()
+        trans_params = self.all_names.values()
         params_list = ['{}=None'.format(param) for param in trans_params]
         result = self.add_row('def __init__(self, {}):'.format(', '.join(params_list)), level=1)
-        for param in trans_params:
-            result += self.add_row('self.{0} = {0}'.format(param), level=2)
+        for param in (self.el.attributes + self.el.sequence + self.el.choice):
+            param_name = self.all_names.get(param.name)
+            result += self.add_row('self.{0} = {0}{1}'.format(
+                param_name,
+                ' or []' if isinstance(param, XSElement) and param.max_occurs != 1 else ''
+            ), level=2)
         result += '\n'
 
         return result
 
     def build_setters(self):
         result = ''
-        for param in (self.el.complex_type.attributes + self.el.complex_type.sequence):
-            result += self.add_row('def set_{}(self, value=None):'.format(self.all_names.get(param.name)), 1)
-            result += self.add_row('self.{} = value'.format(self.all_names.get(param.name)), 2)
+        for param in (self.el.attributes + self.el.sequence):
+            param_name = self.all_names.get(param.name)
+            result += self.add_row('def set_{}(self, value=None):'.format(param_name), 1)
+            result += self.add_row('self.{} = value{}'.format(
+                param_name,
+                ' or []' if isinstance(param, XSElement) and param.max_occurs != 1 else ''), 2)
             result += '\n'
 
-        for choice in self.el.complex_type.choice:
+            if isinstance(param, XSElement) and param.max_occurs != 1:
+                result += self.add_row('def add_{}(self, value=None):'.format(param_name), 1)
+                if param.max_occurs == 0:
+                    result += self.add_row('self.{}.append(value)'.format(param_name), 2)
+                else:
+                    result += self.add_row('if len(self.{}) < {}:'.format(param_name, param.max_occurs), 2)
+                    result += self.add_row('self.{}.append(value)'.format(param_name), 3)
+                    result += self.add_row('else:', 2)
+                    result += self.add_row('raise RuntimeError("Number of children {} exceeded.")'.format(param_name), 3)
+                result += '\n'
+
+        for choice in self.el.choice:
             result += self.add_row('def set_{}(self, value=None):'.format(self.all_names.get(choice.name)), 1)
             result += self.add_row('self.{} = value'.format(self.all_names.get(choice.name)), 2)
             other_choices = filter(lambda x: x.name != choice.name, copy.deepcopy(self.el.complex_type.choice))
