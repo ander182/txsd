@@ -57,8 +57,11 @@ class PyCreator(object):
 
     @staticmethod
     def get_header():
-        return '# coding:utf-8\n' +\
-        'from __future__ import unicode_literals\n\n\n'
+        return '# coding:utf-8\n' \
+               'from __future__ import unicode_literals\n\n\n' \
+               'class BaseRepresent(object):\n' \
+               '    def __init__(self):\n' \
+               '        pass\n\n\n'
 
     def make(self, result_file):
         result_file.write(self.get_header())
@@ -73,6 +76,7 @@ class ClassBuilder(TranslitMixin):
     def __init__(self, el):
         super().__init__()
         self.el = el
+        self.class_name = ''
 
         self.attrib_names = {}
         for attrib in el.attributes:
@@ -99,11 +103,11 @@ class ClassBuilder(TranslitMixin):
     def build_cls(self):
         result = ''
 
-        class_name = self.translit(self.el.name)
-        result += 'class {}(object):\n\n'.format(class_name)
+        self.class_name = self.translit(self.el.name)
+        result += 'class {}(BaseRepresent):\n\n'.format(self.class_name)
         result += self.build_init()
         result += self.build_setters()
-
+        result += self.build_export()
         result += '\n'
         return result
 
@@ -111,6 +115,7 @@ class ClassBuilder(TranslitMixin):
         trans_params = self.all_names.values()
         params_list = ['{}=None'.format(param) for param in trans_params]
         result = self.add_row('def __init__(self, {}):'.format(', '.join(params_list)), level=1)
+        result += self.add_row('super({}, self).__init__()'.format(self.class_name), level=2)
         for param in (self.el.attributes + self.el.sequence + self.el.choice):
             param_name = self.all_names.get(param.name)
             result += self.add_row('self.{0} = {0}{1}'.format(
@@ -150,4 +155,11 @@ class ClassBuilder(TranslitMixin):
             for choice_to_clear in other_choices:
                 result += self.add_row('self.{} = None'.format(self.all_names.get(choice_to_clear.name)), 3)
             result += '\n'
+        return result
+
+    def build_export(self):
+        result = ''
+        result += self.add_row('def export(self):', level=1)
+        result += self.add_row('pass', level=2)
+        result += '\n'
         return result
