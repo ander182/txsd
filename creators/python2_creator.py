@@ -65,17 +65,24 @@ class PyCreator(object):
 
     def make(self, result_file):
         result_file.write(self.get_header())
+        complex_type_for_build = []
         for xs_element in self.xs_elements:
             if not xs_element.complex_type.name:
-                cls_builder = ClassBuilder(xs_element)
+                cls_builder = CommonClassBuilder(xs_element, xs_element.complex_type)
                 result_file.write(cls_builder.build_cls())
+            elif xs_element.complex_type not in complex_type_for_build:
+                complex_type_for_build.append(xs_element.complex_type)
+        for complex_type in complex_type_for_build:
+            cls_builder = CommonClassBuilder(complex_type, complex_type)
+            result_file.write(cls_builder.build_cls())
 
 
-class ClassBuilder(TranslitMixin):
+class CommonClassBuilder(TranslitMixin):
 
-    def __init__(self, el):
+    def __init__(self, el, complex_type):
         super().__init__()
         self.el = el
+        self.complex_type = complex_type
         self.class_name = ''
 
         self.attrib_names = {}
@@ -107,7 +114,10 @@ class ClassBuilder(TranslitMixin):
         result += 'class {}(BaseRepresent):\n\n'.format(self.class_name)
         result += self.build_init()
         result += self.build_setters()
+        result += self.build_has_children()
         result += self.build_export()
+        result += self.build_export_attrs()
+        result += self.build_export_children()
         result += '\n'
         return result
 
@@ -150,16 +160,80 @@ class ClassBuilder(TranslitMixin):
         for choice in self.el.choice:
             result += self.add_row('def set_{}(self, value=None):'.format(self.all_names.get(choice.name)), 1)
             result += self.add_row('self.{} = value'.format(self.all_names.get(choice.name)), 2)
-            other_choices = filter(lambda x: x.name != choice.name, copy.deepcopy(self.el.complex_type.choice))
+            other_choices = filter(lambda x: x.name != choice.name, copy.deepcopy(self.complex_type.choice))
             result += self.add_row('if value:', 2)
             for choice_to_clear in other_choices:
                 result += self.add_row('self.{} = None'.format(self.all_names.get(choice_to_clear.name)), 3)
             result += '\n'
         return result
 
-    def build_export(self):
+    def build_has_children(self):
         result = ''
-        result += self.add_row('def export(self):', level=1)
+        result += self.add_row('def has_children(self):', level=1)
+        children_condition = ' or '.join([
+            'self.{}'.format(x) for x in (list(self.sequence_names.values()) + list(self.choice_names.values()))
+        ])
+        result += self.add_row(
+            'return {}'.format('bool(' + children_condition + ')' if children_condition else 'False'),
+            level=2)
+        result += '\n'
+        return result
+
+    def build_export_attrs(self):
+        result = ''
+        result += self.add_row('def export_attrs(self):', level=1)
+        result += self.add_row('result = ""', level=2)
+        for attr in self.el.attributes:
+            attr_name = self.attrib_names.get(attr.name)
+            attr_lower_name = attr_name.lower()
+            attr_value_template = self.get_attr_value_template(attr)
+            result += self.add_row('{attr_low} = {template} if self.{name} else ""'.format(
+                attr_low=attr_lower_name,
+                template=attr_value_template.format(attr='self.' + attr_name),
+                name=attr_name
+            ), level=2)
+            if not attr.required:
+                result += self.add_row('if {}:'.format(attr_lower_name), level=2)
+                setter_level = 3
+            else:
+                setter_level = 2
+            result += self.add_row('result += \' {raw_name}="{{}}"\'.format({lower_name})'.format(
+                raw_name=attr.name,
+                lower_name=attr_lower_name
+            ), level=setter_level)
+
+        result += self.add_row('return result', level=2)
+        result += '\n'
+        return result
+
+    def get_attr_value_template(self, attribute):
+        return '{attr}'
+
+    def build_export_children(self):
+        result = ''
+        result += self.add_row('def export_children(self, outfile, level):', level=1)
         result += self.add_row('pass', level=2)
         result += '\n'
         return result
+
+    def build_export(self):
+        result = ''
+        result += self.add_row('def export(self, outfile, level):', level=1)
+        result += self.add_row('attrs = self.export_attrs()', level=2)
+        result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}{{attrs}}{{close_letter}}\\n'.format("
+                               "level=' ' * 4 * level, namespace='{namespace}', tag='{tag}', attrs=attrs, "
+                               "close_letter='>' if self.has_children() else '/>'))".format(
+                namespace='', tag=self.el.name),
+            level=2)
+        result += self.add_row('self.export_children(outfile, level=level + 1)', level=2)
+        result += self.add_row('if self.has_children():', level=2)
+        result += self.add_row("outfile.write('{{level}}</{{namespace}}{{tag}}>\\n'.format("
+                               "level='' * 4 * level, "
+                               "namespace='{namespace}', "
+                               "tag='{tag}'))".format(
+                namespace='', tag=self.el.name
+        ), level=3)
+
+        result += '\n'
+        return result
+
