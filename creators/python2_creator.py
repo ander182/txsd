@@ -212,7 +212,41 @@ class CommonClassBuilder(TranslitMixin):
     def build_export_children(self):
         result = ''
         result += self.add_row('def export_children(self, outfile, level):', level=1)
-        result += self.add_row('pass', level=2)
+        if self.el.sequence or self.el.choice:
+            result += self.add_row('child_level = level + 1', level=2)
+            if self.el.sequence:
+                result += self.add_row('# sequence', level=2)
+                for seq_el in self.el.sequence:
+                    seq_el_name = self.sequence_names.get(seq_el.name)
+                    if seq_el.min_occurs:
+                        result += self.add_row('if self.{}:'.format(seq_el_name), level=2)
+                        next_level = 3
+                    else:
+                        next_level = 2
+
+                    if seq_el.max_occurs == 1:
+                        result += self.add_row('self.{}.export(outfile, level=child_level)'.format(seq_el_name), level=next_level)
+                    else:
+                        result += self.add_row('for el in self.{}:'.format(seq_el_name), level=next_level)
+                        result += self.add_row('el.export(outfile, level=child_level)', level=next_level+1)
+
+            if self.el.choice:
+                result += self.add_row('# choice', level=2)
+                for choice_el in self.el.choice:
+                    choice_index = self.el.choice.index(choice_el)
+                    choice_el_name = self.choice_names.get(choice_el.name)
+                    if choice_index == 0:
+                        result += self.add_row('if self.{}:'.format(choice_el_name), level=2)
+                    else:
+                        result += self.add_row('elif self.{}:'.format(choice_el_name), level=2)
+
+                    if choice_el.max_occurs == 1:
+                        result += self.add_row('self.{}.export(outfile, level=child_level)'.format(choice_el_name), level=3)
+                    else:
+                        result += self.add_row('for el in self.{}:'.format(choice_el_name), level=3)
+                        result += self.add_row('el.export(outfile, level=child_level)', level=4)
+        else:
+            result += self.add_row('pass', level=2)
         result += '\n'
         return result
 
