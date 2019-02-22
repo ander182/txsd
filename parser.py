@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError, XSParserNotImplemented
-from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement
+from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement, XSSimpleType
 
 
 class CTRelation(object):
@@ -56,7 +56,8 @@ class MainMap(object):
         self.mm = {}
 
     def set(self, name, element):
-        self.mm[name] = element
+        if name not in self.mm:
+            self.mm[name] = element
 
     def get(self, name):
         result = self.mm.get(name)
@@ -165,6 +166,7 @@ class Parser(object):
 
         sorted_complex_types = []
         if self.ct_relations:
+            self.remove_stypes_from_ct_relations(simple_types)
             for ct in ct_sorted(self.ct_relations):
                 sorted_ct_node = complex_types_map.get(ct.name)
                 if sorted_ct_node is None:
@@ -173,6 +175,14 @@ class Parser(object):
 
         result = simple_types + sorted_complex_types + raw_elements
         return result
+
+    def remove_stypes_from_ct_relations(self, simple_types):
+        for stype_el in simple_types:
+            name = stype_el.attrib.get('name')
+            if name:
+                for relation in self.ct_relations.values():
+                    if relation.relation_list.count(name):
+                        relation.relation_list.remove(name)
 
     def get_etree_relations(self, node, containers=None):
         assert containers
@@ -189,16 +199,18 @@ class Parser(object):
                         for c in containers:
                             c.append(rel_element.attrib.get('type'))
                     elif rel_element.attrib.get('name'):
-                        for c in containers:
-                            c.append(rel_element.attrib.get('name'))
+                        if rel_element.xpath('complexType'):
+                            for c in containers:
+                                c.append(rel_element.attrib.get('name'))
+                            self.add_ct_relation(sub_node.attrib.get('name'), self.get_etree_relations(
+                                rel_element,
+                                containers=containers
+                            ))
+                    elif isinstance(rel_element, etree._Comment):
+                        continue
                     else:
                         raise XSParserError('Relation type name not found')
 
-                    if rel_element.xpath('complexType'):
-                        self.add_ct_relation(sub_node.attrib.get('name'), self.get_etree_relations(
-                            rel_element,
-                            containers=containers
-                        ))
         return container
 
     def make_simple_type(self, node):
@@ -210,7 +222,7 @@ class Parser(object):
         if doc is not None:
             documentation = doc.text
 
-        restriction = self.xpath_get(node, _xs+':restriction', namespaces=node.nsmap)
+        restriction = self.xpath_get(node, './/{0}:restriction[@base]'.format(_xs), namespaces=node.nsmap)
         base = restriction.attrib.get('base')
         if not base:
             raise XSParserError('Internal error: restriction base not found on simpleType')
@@ -325,9 +337,11 @@ class Parser(object):
 
         ttype = node.attrib.get('type')
         if ttype:
-            complex_type = self.main_map.get(ttype)
-            if complex_type:
-                el.complex_type = complex_type
+            parent_type = self.main_map.get(ttype)
+            if isinstance(parent_type, XSComplexType):
+                el.complex_type = parent_type
+            elif isinstance(parent_type, XSSimpleType):
+                el.simple_type = parent_type
             else:
                 raise XSParserError('type {} not found for element {}'.format(ttype, name))
 
@@ -337,6 +351,13 @@ class Parser(object):
             child_ctype_node = self.xpath_get(node, '{}:complexType'.format(_xs), namespaces=node.nsmap)
             if child_ctype_node is not None:
                 el.complex_type = self.make_complex_type(child_ctype_node, as_external=as_external)
+            else:
+                child_stype_node = self.xpath_get(node, '{}:simpleType'.format(_xs), namespaces=node.nsmap)
+                if child_stype_node is not None:
+                    el.simple_type = self.make_simple_type(child_stype_node)
+
+        if not (el.complex_type or el.simple_type):
+            raise XSParserError('xs_type not found for element {}'.format(name))
 
         return el
 

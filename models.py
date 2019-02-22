@@ -98,6 +98,7 @@ class XSElement(object):
         self.max_occurs = 1
 
         self.complex_type = None
+        self.simple_type = None
 
     @property
     def attributes(self):
