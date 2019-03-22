@@ -1,7 +1,7 @@
 # coding:utf-8
 import copy
 
-from models import XSElement
+from models import XSElement, XSBaseNumericType
 
 
 class TranslitMixin(object):
@@ -187,10 +187,11 @@ class CommonClassBuilder(TranslitMixin):
             attr_name = self.attrib_names.get(attr.name)
             attr_lower_name = attr_name.lower()
             attr_value_template = self.get_attr_value_template(attr)
-            result += self.add_row('{attr_low} = {template} if self.{name} else ""'.format(
+            result += self.add_row('{attr_low} = {template} if self.{name} else {default}'.format(
                 attr_low=attr_lower_name,
                 template=attr_value_template.format(attr='self.' + attr_name),
-                name=attr_name
+                name=attr_name,
+                default=self.get_default_attr(attr)
             ), level=2)
             if not attr.required:
                 result += self.add_row('if {}:'.format(attr_lower_name), level=2)
@@ -205,6 +206,14 @@ class CommonClassBuilder(TranslitMixin):
         result += self.add_row('return result', level=2)
         result += '\n'
         return result
+
+    def get_default_attr(self, attr):
+        result = '""'
+        if attr.required:
+            if isinstance(attr.simple_type, XSBaseNumericType):
+                result = '0'
+        return result
+
 
     def get_attr_value_template(self, attribute):
         return '{attr}'
@@ -222,29 +231,31 @@ class CommonClassBuilder(TranslitMixin):
                 for seq_el in self.el.sequence:
 
                     seq_el_name = self.sequence_names.get(seq_el.name)
-                    if seq_el.min_occurs:
+                    if not seq_el.min_occurs:
                         result += self.add_row('if self.{}:'.format(seq_el_name), level=2)
                         next_level = 3
                     else:
                         next_level = 2
                     if seq_el.complex_type:
                         if seq_el.max_occurs == 1:
-                            result += self.add_row('self.{}.export(outfile, level=child_level)'.format(seq_el_name), level=next_level)
+                            result += self.add_row('self.{}.export(outfile, level=child_level, name="{}")'.format(seq_el_name, seq_el.name), level=next_level)
                         else:
                             result += self.add_row('for el in self.{}:'.format(seq_el_name), level=next_level)
-                            result += self.add_row('el.export(outfile, level=child_level)', level=next_level+1)
+                            result += self.add_row('el.export(outfile, level=child_level, name="{}")'.format(seq_el.name), level=next_level+1)
                     elif seq_el.simple_type:
                         stype_template = self.get_simple_type_value_template(seq_el.simple_type)
-                        result += self.add_row('{stype_low} = {template} if self.{name} else ""'.format(
+                        result += self.add_row('{stype_low} = {template} if self.{name} else {default}'.format(
                             stype_low=seq_el_name.lower(),
                             template=stype_template.format(attr='self.' + seq_el_name),
-                            name=seq_el_name
+                            name=seq_el_name,
+                            default="''" if seq_el.min_occurs else 'None',
                         ), level=next_level)
+                        result += self.add_row("if {} is not None:".format(seq_el_name.lower()), level=next_level)
                         result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
-                                               "level='    ' * level, namespace='{namespace}', tag='{tag}', "
+                                               "level='  ' * level, namespace='{namespace}', tag='{tag}', "
                                                "content={stype_low}))".format(
                             namespace='', tag=seq_el.name, stype_low=seq_el_name.lower()
-                        ), level=next_level)
+                        ), level=next_level+1)
 
             if self.el.choice:
                 result += self.add_row('# choice', level=2)
@@ -263,17 +274,18 @@ class CommonClassBuilder(TranslitMixin):
                             result += self.add_row('el.export(outfile, level=child_level)', level=4)
                     elif choice_el.simple_type:
                         stype_template = self.get_simple_type_value_template(choice_el.simple_type)
-                        result += self.add_row('{stype_low} = {template} if self.{name} else ""'.format(
+                        result += self.add_row('{stype_low} = {template} if self.{name} else None'.format(
                             stype_low=choice_el_name.lower(),
                             template=stype_template.format(attr='self.' + choice_el_name),
                             name=choice_el_name
                         ), level=3)
+                        result += self.add_row("if {} is not None:".format(choice_el_name.lower()), level=3)
                         result += self.add_row(
                             "outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
-                            "level='    ' * level, namespace='{namespace}', tag='{tag}', "
+                            "level='  ' * level, namespace='{namespace}', tag='{tag}', "
                             "content={stype_low}))".format(
                                 namespace='', tag=choice_el.name, stype_low=choice_el_name.lower()
-                            ), level=3)
+                            ), level=4)
 
         else:
             result += self.add_row('pass', level=2)
@@ -282,19 +294,19 @@ class CommonClassBuilder(TranslitMixin):
 
     def build_export(self):
         result = ''
-        result += self.add_row('def export(self, outfile, level):', level=1)
+        result += self.add_row('def export(self, outfile, level, name="{}"):'.format(self.el.name), level=1)
         result += self.add_row('attrs = self.export_attrs()', level=2)
         result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}{{attrs}}{{close_letter}}\\n'.format("
-                               "level='    ' * level, namespace='{namespace}', tag='{tag}', attrs=attrs, "
+                               "level='  ' * level, namespace='{namespace}', tag=name, attrs=attrs, "
                                "close_letter='>' if self.has_children() else '/>'))".format(
                 namespace='', tag=self.el.name),
             level=2)
         result += self.add_row('self.export_children(outfile, level=level + 1)', level=2)
         result += self.add_row('if self.has_children():', level=2)
         result += self.add_row("outfile.write('{{level}}</{{namespace}}{{tag}}>\\n'.format("
-                               "level='    ' * level, "
+                               "level='  ' * level, "
                                "namespace='{namespace}', "
-                               "tag='{tag}'))".format(
+                               "tag=name))".format(
                 namespace='', tag=self.el.name
         ), level=3)
 
