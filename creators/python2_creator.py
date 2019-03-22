@@ -242,8 +242,8 @@ class CommonClassBuilder(TranslitMixin):
                         ), level=next_level)
                         result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
                                                "level='    ' * level, namespace='{namespace}', tag='{tag}', "
-                                               "content={stype_low})".format(
-                            namespace='', tag=seq_el_name, stype_low=seq_el_name.lower()
+                                               "content={stype_low}))".format(
+                            namespace='', tag=seq_el.name, stype_low=seq_el_name.lower()
                         ), level=next_level)
 
             if self.el.choice:
@@ -272,7 +272,7 @@ class CommonClassBuilder(TranslitMixin):
                             "outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
                             "level='    ' * level, namespace='{namespace}', tag='{tag}', "
                             "content={stype_low}))".format(
-                                namespace='', tag=choice_el_name, stype_low=choice_el_name.lower()
+                                namespace='', tag=choice_el.name, stype_low=choice_el_name.lower()
                             ), level=3)
 
         else:
@@ -300,4 +300,3 @@ class CommonClassBuilder(TranslitMixin):
 
         result += '\n'
         return result
-

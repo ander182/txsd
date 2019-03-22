@@ -134,7 +134,8 @@ class Parser(object):
                 if element.name is None:
                     raise XSParserError('XSD-schema error: external xs:element not found name')
                 self.main_map.set(element.name, element)
-                self.external_objects.append(element)
+                if element.complex_type:
+                    self.external_objects.append(element)
 
 
     def determine_sequence(self):
@@ -301,7 +302,7 @@ class Parser(object):
             for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
                 seq_el = self.make_element(node_el, as_external=as_external)
                 self.main_map.set(seq_el.name, seq_el)
-                if as_external:
+                if as_external and seq_el.complex_type:
                     self.external_objects.append(seq_el)
                 c_type.sequence.append(seq_el)
 
@@ -310,7 +311,7 @@ class Parser(object):
             for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
                 choice_el = self.make_element(node_el, as_external=as_external)
                 self.main_map.set(choice_el.name, choice_el)
-                if as_external:
+                if as_external and choice_el.complex_type:
                     self.external_objects.append(choice_el)
                 c_type.choice.append(choice_el)
 
