@@ -125,7 +125,7 @@ class Parser(object):
                     raise XSParserError('XSD-schema error: external xs:simpleType not found name')
                 self.main_map.set(s_type.name, s_type)
             if primary_node.tag == self.get_tag('complexType'):
-                c_type = self.make_complex_type(primary_node)
+                c_type = self.make_complex_type(primary_node, as_external=True)
                 if c_type.name is None:
                     raise XSParserError('XSD-schema error: external xs:complexType not found name')
                 self.main_map.set(c_type.name, c_type)

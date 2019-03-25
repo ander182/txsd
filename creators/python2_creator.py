@@ -244,18 +244,32 @@ class CommonClassBuilder(TranslitMixin):
                             result += self.add_row('el.export(outfile, level=child_level, name="{}")'.format(seq_el.name), level=next_level+1)
                     elif seq_el.simple_type:
                         stype_template = self.get_simple_type_value_template(seq_el.simple_type)
+                        if seq_el.max_occurs == 1:
+                            _default = "''" if seq_el.min_occurs else 'None'
+                        else:
+                            _default = "[]"
                         result += self.add_row('{stype_low} = {template} if self.{name} else {default}'.format(
                             stype_low=seq_el_name.lower(),
                             template=stype_template.format(attr='self.' + seq_el_name),
                             name=seq_el_name,
-                            default="''" if seq_el.min_occurs else 'None',
+                            default=_default,
                         ), level=next_level)
                         result += self.add_row("if {} is not None:".format(seq_el_name.lower()), level=next_level)
-                        result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
-                                               "level='  ' * level, namespace='{namespace}', tag='{tag}', "
-                                               "content={stype_low}))".format(
-                            namespace='', tag=seq_el.name, stype_low=seq_el_name.lower()
-                        ), level=next_level+1)
+                        if seq_el.max_occurs == 1:
+                            result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
+                                                   "level='  ' * level, namespace='{namespace}', tag='{tag}', "
+                                                   "content={stype_low}))".format(
+                                namespace='', tag=seq_el.name, stype_low=seq_el_name.lower()
+                            ), level=next_level+1)
+                        else:
+                            result += self.add_row('for content in {}:'.format(seq_el_name.lower()), level=next_level+1)
+                            result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
+                                                   "level='  ' * level, namespace='{namespace}', tag='{tag}', "
+                                                   "content=content))".format(
+                                namespace='', tag=seq_el.name
+                            ), level=next_level+2)
+
+
 
             if self.el.choice:
                 result += self.add_row('# choice', level=2)
