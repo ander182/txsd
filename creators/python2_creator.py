@@ -61,7 +61,23 @@ class PyCreator(object):
                'from __future__ import unicode_literals\n\n\n' \
                'class BaseRepresent(object):\n' \
                '    def __init__(self):\n' \
-               '        pass\n\n\n'
+               '        pass\n\n' \
+               '    def quote_xml(self, inStr):\n' \
+               '        if not inStr:\n' \
+               '             return ""\n' \
+               '        s1 = (isinstance(inStr, basestring) and inStr or "%s" % inStr)\n' \
+               '        s1 = s1.replace("&", "&amp;")\n' \
+               '        s1 = s1.replace("<", "&lt;")\n' \
+               '        s1 = s1.replace(">", "&gt;")\n' \
+               '        return s1\n\n' \
+               '    def quote_attrib(self, inStr):\n' \
+               '        s1 = (isinstance(inStr, basestring) and inStr or "%s" % inStr)\n' \
+               '        s1 = s1.replace("&", "&amp;")\n' \
+               '        s1 = s1.replace("<", "&lt;")\n' \
+               '        s1 = s1.replace(">", "&gt;")\n' \
+               '        s1 = s1.replace("\\\"", "&quot;")\n' \
+               '        return s1\n\n\n'
+
 
     def make(self, result_file):
         result_file.write(self.get_header())
@@ -214,12 +230,11 @@ class CommonClassBuilder(TranslitMixin):
                 result = '0'
         return result
 
-
     def get_attr_value_template(self, attribute):
-        return '{attr}'
+        return 'self.quote_attrib({attr})'
 
     def get_simple_type_value_template(self, stype):
-        return '{attr}'
+        return 'self.quote_xml({attr})'
 
     def build_export_children(self):
         result = ''
