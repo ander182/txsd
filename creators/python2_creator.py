@@ -234,7 +234,7 @@ class CommonClassBuilder(TranslitMixin):
         return 'self.quote_attrib({attr})'
 
     def get_simple_type_value_template(self, stype):
-        return 'self.quote_xml({attr})'
+        return '{attr}'
 
     def build_export_children(self):
         result = ''
@@ -273,14 +273,14 @@ class CommonClassBuilder(TranslitMixin):
                         if seq_el.max_occurs == 1:
                             result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
                                                    "level='  ' * level, namespace='{namespace}', tag='{tag}', "
-                                                   "content={stype_low}))".format(
+                                                   "content=self.quote_xml({stype_low})))".format(
                                 namespace='', tag=seq_el.name, stype_low=seq_el_name.lower()
                             ), level=next_level+1)
                         else:
                             result += self.add_row('for content in {}:'.format(seq_el_name.lower()), level=next_level+1)
                             result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}>{{content}}</{{namespace}}{{tag}}>\\n'.format("
                                                    "level='  ' * level, namespace='{namespace}', tag='{tag}', "
-                                                   "content=content))".format(
+                                                   "content=self.quote_xml(content)))".format(
                                 namespace='', tag=seq_el.name
                             ), level=next_level+2)
 
