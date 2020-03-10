@@ -323,10 +323,10 @@ class CommonClassBuilder(TranslitMixin):
 
     def build_export(self):
         result = ''
-        result += self.add_row('def export(self, outfile, level, name="{}"):'.format(self.el.name), level=1)
+        result += self.add_row('def export(self, outfile, level, name="{}", ns_def=""):'.format(self.el.name), level=1)
         result += self.add_row('attrs = self.export_attrs()', level=2)
-        result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}{{attrs}}{{close_letter}}\\n'.format("
-                               "level='  ' * level, namespace='{namespace}', tag=name, attrs=attrs, "
+        result += self.add_row("outfile.write('{{level}}<{{namespace}}{{tag}}{{ns_def}}{{attrs}}{{close_letter}}\\n'.format("
+                               "level='  ' * level, namespace='{namespace}', tag=name, ns_def=(ns_def and ' ' + ns_def or ''), attrs=attrs, "
                                "close_letter='>' if self.has_children() else '/>'))".format(
                 namespace='', tag=self.el.name),
             level=2)
