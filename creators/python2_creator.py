@@ -61,6 +61,8 @@ class PyCreator(object):
                'from __future__ import unicode_literals\n\n\n' \
                'class BaseRepresent(object):\n' \
                '    def __init__(self):\n' \
+               '        super(BaseRepresent, self).__init__()\n\n' \
+               '    def export_children(self, *args, **kwargs):\n' \
                '        pass\n\n' \
                '    def quote_xml(self, inStr):\n' \
                '        if not inStr:\n' \
@@ -203,7 +205,7 @@ class CommonClassBuilder(TranslitMixin):
             attr_name = self.attrib_names.get(attr.name)
             attr_lower_name = attr_name.lower()
             attr_value_template = self.get_attr_value_template(attr)
-            result += self.add_row('{attr_low} = {template} if self.{name} else {default}'.format(
+            result += self.add_row('{attr_low} = {template} if self.{name} is not None else {default}'.format(
                 attr_low=attr_lower_name,
                 template=attr_value_template.format(attr='self.' + attr_name),
                 name=attr_name,
@@ -239,6 +241,7 @@ class CommonClassBuilder(TranslitMixin):
     def build_export_children(self):
         result = ''
         result += self.add_row('def export_children(self, outfile, level):', level=1)
+        result += self.add_row('super({}, self).export_children(outfile, level)'.format(self.class_name), level=2)
         if self.el.sequence or self.el.choice:
             result += self.add_row('child_level = level + 1', level=2)
             if self.el.sequence:
@@ -263,7 +266,7 @@ class CommonClassBuilder(TranslitMixin):
                             _default = "''" if seq_el.min_occurs else 'None'
                         else:
                             _default = "[]"
-                        result += self.add_row('{stype_low} = {template} if self.{name} else {default}'.format(
+                        result += self.add_row('{stype_low} = {template} if self.{name} is not None else {default}'.format(
                             stype_low=seq_el_name.lower(),
                             template=stype_template.format(attr='self.' + seq_el_name),
                             name=seq_el_name,
@@ -303,7 +306,7 @@ class CommonClassBuilder(TranslitMixin):
                             result += self.add_row('el.export(outfile, level=child_level)', level=4)
                     elif choice_el.simple_type:
                         stype_template = self.get_simple_type_value_template(choice_el.simple_type)
-                        result += self.add_row('{stype_low} = {template} if self.{name} else None'.format(
+                        result += self.add_row('{stype_low} = {template} if self.{name} is not None else None'.format(
                             stype_low=choice_el_name.lower(),
                             template=stype_template.format(attr='self.' + choice_el_name),
                             name=choice_el_name
@@ -316,8 +319,6 @@ class CommonClassBuilder(TranslitMixin):
                                 namespace='', tag=choice_el.name, stype_low=choice_el_name.lower()
                             ), level=4)
 
-        else:
-            result += self.add_row('pass', level=2)
         result += '\n'
         return result
 
