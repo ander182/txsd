@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 from lxml import etree
 from exceptions import XSInputError, XSParserError, XSParserNotImplemented
 from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement, XSSimpleType
 
 
 class CTRelation(object):
-    u""" Объект хранящий в себе связи одного complexType с другими """
+    """ Объект хранящий в себе связи одного complexType с другими """
     def __init__(self, name, relation_list=None):
         super().__init__()
 
@@ -14,7 +13,7 @@ class CTRelation(object):
 
 
 def ct_sorted(ct_relation_dict):
-    u""" Функция принимает словарь {"название": СTRelation}. Возвращает отсортированный список CTRelation.
+    """ Функция принимает словарь {"название": СTRelation}. Возвращает отсортированный список CTRelation.
       Гарантируется что элемент будет находится после связаных с ним элементов.
       """
     result_names = []
