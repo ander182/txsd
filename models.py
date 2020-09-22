@@ -19,6 +19,9 @@ class XSSimpleType(object):
         if multiple:
             self.multiple_fields.append(field_name)
 
+    def __str__(self):
+        return 'SimpleType <{}>'.format(self.name)
+
 
 class XSStringType(XSSimpleType):
 
@@ -68,6 +71,9 @@ class XSAttribute(object):
 
         self.documentation = None
 
+    def __str__(self):
+        return 'Attribute <{}>'.format(self.name)
+
 
 class XSComplexType(object):
     def __init__(self, name=None):
@@ -79,6 +85,9 @@ class XSComplexType(object):
 
         self.sequence = []
         self.choice = []
+
+    def __str__(self):
+        return 'ComplexType <{}>'.format(self.name)
 
     def add_attribute(self, attribute):
         assert isinstance(attribute, XSAttribute)
@@ -99,6 +108,9 @@ class XSElement(object):
 
         self.complex_type = None
         self.simple_type = None
+
+    def __str__(self):
+        return 'Element <{}>'.format(self.name)
 
     @property
     def attributes(self):

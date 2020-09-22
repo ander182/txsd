@@ -19,7 +19,7 @@ class Py3Creator(object):
                '        pass\n\n' \
                '    def quote_xml(self, inStr):\n' \
                '        if not inStr:\n' \
-               '             return ""\n' \
+               '            return ""\n' \
                '        s1 = (isinstance(inStr, str) and inStr or "%s" % inStr)\n' \
                '        s1 = s1.replace("&", "&amp;")\n' \
                '        s1 = s1.replace("<", "&lt;")\n' \
@@ -193,7 +193,7 @@ class CommonClassBuilder(TranslitMixin):
     def build_export_children(self):
         result = ''
         result += self.add_row('def export_children(self, outfile, level):', level=1)
-        result += self.add_row('super({}, self).export_children(outfile, level)'.format(self.class_name), level=2)
+        result += self.add_row('super().export_children(outfile, level)', level=2)
         if self.el.sequence or self.el.choice:
             result += self.add_row('child_level = level + 1', level=2)
             if self.el.sequence:

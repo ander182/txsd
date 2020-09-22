@@ -128,6 +128,7 @@ class Parser(object):
                 if c_type.name is None:
                     raise XSParserError('XSD-schema error: external xs:complexType not found name')
                 self.main_map.set(c_type.name, c_type)
+
             if primary_node.tag == self.get_tag('element'):
                 element = self.make_element(primary_node, as_external=True)
                 if element.name is None:
@@ -298,23 +299,33 @@ class Parser(object):
 
         node_sequence = self.xpath_get(node, '{}:sequence'.format(_xs), namespaces=node.nsmap)
         if node_sequence is not None:
-            for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
-                seq_el = self.make_element(node_el, as_external=as_external)
-                self.main_map.set(seq_el.name, seq_el)
-                if as_external and seq_el.complex_type:
-                    self.external_objects.append(seq_el)
-                c_type.sequence.append(seq_el)
-
+            self._make_sequence(node_sequence, c_type, as_external=as_external)
         node_choice = self.xpath_get(node, '{}:choice'.format(_xs), namespaces=node.nsmap)
         if node_choice is not None:
-            for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
-                choice_el = self.make_element(node_el, as_external=as_external)
-                self.main_map.set(choice_el.name, choice_el)
-                if as_external and choice_el.complex_type:
-                    self.external_objects.append(choice_el)
-                c_type.choice.append(choice_el)
+            self._make_choice(node_choice, c_type, as_external=as_external)
 
         return c_type
+
+    def _make_sequence(self, node_sequence, parent_c_type, as_external=False):
+        _xs = self.schema_ns
+        for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
+            seq_el = self.make_element(node_el, as_external=as_external)
+            self.main_map.set(seq_el.name, seq_el)
+            if as_external and seq_el.complex_type:
+                self.external_objects.append(seq_el)
+            parent_c_type.sequence.append(seq_el)
+        node_choice = self.xpath_get(node_sequence, '{}:choice'.format(_xs), namespaces=node_sequence.nsmap)
+        if node_choice is not None:
+            self._make_choice(node_choice, parent_c_type, as_external=as_external)
+
+    def _make_choice(self, node_choice, parent_c_type, as_external=False):
+        _xs = self.schema_ns
+        for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
+            choice_el = self.make_element(node_el, as_external=as_external)
+            self.main_map.set(choice_el.name, choice_el)
+            if as_external and choice_el.complex_type:
+                self.external_objects.append(choice_el)
+            parent_c_type.choice.append(choice_el)
 
     def make_element(self, node, as_external=False):
 

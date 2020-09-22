@@ -36,7 +36,7 @@ class TranslitMixin(object):
             '\u042b': 'Y', '\u044b': 'y',
             '\u042c': '', '\u044c': '',
             '\u042d': 'E', '\u044d': 'e',
-            '\u042e': 'Y', '\u044e': 'yu',
+            '\u042e': 'Yu', '\u044e': 'yu',
             '\u042f': 'Ya', '\u044f': 'ya',
         }
         translit_string = []
