@@ -50,8 +50,9 @@ def ct_sorted(ct_relation_dict):
 
 class MainMap(object):
 
-    def __init__(self):
+    def __init__(self, schema_ns):
         super().__init__()
+        self.schema_ns = schema_ns
         self.mm = {}
 
     def set(self, name, element):
@@ -60,7 +61,7 @@ class MainMap(object):
 
     def get(self, name):
         result = self.mm.get(name)
-        if not result and name.startswith('xs:'):
+        if not result and name.startswith('{}:'.format(self.schema_ns)):
             result = XSStringType(name=name)
         return result
 
@@ -84,7 +85,7 @@ class Parser(object):
         self.ct_relations = {}
 
         # мапа всех типов и элементов
-        self.main_map = MainMap()
+        self.main_map = MainMap(schema_ns=schema_ns)
 
         # объекты, которые должны превратится в итоговые классы
         self.external_objects = []
@@ -246,7 +247,7 @@ class Parser(object):
         for key, field_name in s_type.available_restriction_map.items():
             if field_name in s_type.multiple_fields:
                 container = getattr(s_type, field_name, [])
-                for param in restriction.xpath(_xs + ':{}'.format(key), namespaces=restriction.nsmap):
+                for param in self.xpath_list(restriction, _xs + ':{}'.format(key), namespaces=restriction.nsmap):
                     container.append(param.attrib.get('value'))
             else:
                 _ = self.xpath_get(restriction, _xs + ':{}'.format(key), namespaces=node.nsmap)
@@ -267,7 +268,7 @@ class Parser(object):
         c_type = XSComplexType(name=name)
         c_type.documentation = documentation
 
-        for node_attribute in node.xpath('{0}:attribute'.format(_xs), namespaces=node.nsmap):
+        for node_attribute in self.xpath_list(node, '{0}:attribute'.format(_xs), namespaces=node.nsmap):
             attr_name = node_attribute.attrib.get('name')
             attribute = XSAttribute(
                 name=attr_name,
@@ -308,7 +309,7 @@ class Parser(object):
 
     def _make_sequence(self, node_sequence, parent_c_type, as_external=False):
         _xs = self.schema_ns
-        for node_el in node_sequence.xpath('{}:element'.format(_xs), namespaces=node_sequence.nsmap):
+        for node_el in self.xpath_list(node_sequence, '{}:element'.format(_xs), namespaces=node_sequence.nsmap):
             seq_el = self.make_element(node_el, as_external=as_external)
             self.main_map.set(seq_el.name, seq_el)
             if as_external and seq_el.complex_type:
@@ -320,7 +321,7 @@ class Parser(object):
 
     def _make_choice(self, node_choice, parent_c_type, as_external=False):
         _xs = self.schema_ns
-        for node_el in node_choice.xpath('{}:element'.format(_xs), namespaces=node_choice.nsmap):
+        for node_el in self.xpath_list(node_choice, '{}:element'.format(_xs), namespaces=node_choice.nsmap):
             choice_el = self.make_element(node_el, as_external=as_external)
             self.main_map.set(choice_el.name, choice_el)
             if as_external and choice_el.complex_type:
@@ -374,8 +375,22 @@ class Parser(object):
 
     @staticmethod
     def xpath_get(node, path, namespaces=None):
+        # Note that XPath does not have a notion of a default namespace. The empty prefix is therefore undefined
+        # for XPath and cannot be used in namespace prefix mappings.
+        if namespaces and namespaces.get(None):
+            namespaces.pop(None)
+
         for result in node.xpath(path, namespaces=namespaces):
             return result
+
+    @staticmethod
+    def xpath_list(node, path, namespaces=None):
+        # Note that XPath does not have a notion of a default namespace. The empty prefix is therefore undefined
+        # for XPath and cannot be used in namespace prefix mappings.
+        if namespaces and namespaces.get(None):
+            namespaces.pop(None)
+
+        return node.xpath(path, namespaces=namespaces)
 
 
 def main():

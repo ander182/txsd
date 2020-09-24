@@ -38,10 +38,16 @@ class Py2Creator(object):
     def make(self, result_file):
         result_file.write(self.get_header())
         complex_type_for_build = []
+        used_names = {}
         for xs_element in self.xs_elements:
             if not xs_element.complex_type.name:
-                cls_builder = CommonClassBuilder(xs_element, xs_element.complex_type)
+                if xs_element.name in used_names:
+                    class_index = used_names.get(xs_element.name)
+                else:
+                    class_index = None
+                cls_builder = CommonClassBuilder(xs_element, xs_element.complex_type, class_index=class_index)
                 result_file.write(cls_builder.build_cls())
+                used_names[xs_element.name] = class_index + 1 if class_index is not None else 1
             elif xs_element.complex_type not in complex_type_for_build:
                 complex_type_for_build.append(xs_element.complex_type)
         for complex_type in complex_type_for_build:
@@ -51,11 +57,12 @@ class Py2Creator(object):
 
 class CommonClassBuilder(TranslitMixin):
 
-    def __init__(self, el, complex_type):
+    def __init__(self, el, complex_type, class_index=None):
         super().__init__()
         self.el = el
         self.complex_type = complex_type
         self.class_name = ''
+        self.class_name_index = class_index
 
         self.attrib_names = {}
         for attrib in el.attributes:
@@ -83,10 +90,11 @@ class CommonClassBuilder(TranslitMixin):
         result = ''
 
         self.class_name = self.translit(self.el.name)
-        result += 'class {}(BaseRepresent):\n\n'.format(self.class_name)
+        result += 'class {}{}(BaseRepresent):\n\n'.format(self.class_name, self.class_name_index or '')
         result += self.build_init()
         result += self.build_setters()
         result += self.build_has_children()
+        result += self.build_has_content()
         result += self.build_export()
         result += self.build_export_attrs()
         result += self.build_export_children()
@@ -148,6 +156,24 @@ class CommonClassBuilder(TranslitMixin):
         result += self.add_row(
             'return {}'.format('bool(' + children_condition + ')' if children_condition else 'False'),
             level=2)
+        result += '\n'
+        return result
+
+    def build_has_content(self):
+        result = ''
+        result += self.add_row('def has_content(self):', level=1)
+        if self.all_names:
+            result += self.add_row('return (', level=2)
+            names_length = len(self.all_names.values())
+            names_count = 0
+            for name in self.all_names.values():
+                names_count += 1
+                result += self.add_row('self.{name} is not None{_or}'.format(
+                    name=name, _or=' or' if names_count < names_length else ''
+                ), level=3)
+            result += self.add_row(')', level=2)
+        else:
+            result += self.add_row('return False', level=2)
         result += '\n'
         return result
 

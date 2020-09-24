@@ -11,6 +11,7 @@ def main():
     arg_parser.add_argument('-o', '--output', action='store', )
     arg_parser.add_argument('-e', '--encoding', action='store', default='utf-8')
     arg_parser.add_argument('-c', '--creator', action='store', default='py3')
+    arg_parser.add_argument('-n', '--schema_ns', action='store', default='xs')
     args = arg_parser.parse_args()
     if not args.output:
         args.output = args.input + '.py'
@@ -19,6 +20,7 @@ def main():
         output_path=args.output,
         encoding=args.encoding,
         creator=args.creator,
+        schema_ns=args.schema_ns,
     )
 
 
@@ -31,8 +33,8 @@ def get_creator_class(creator_key):
         print('Creator is not specified or specified incorrectly')
 
 
-def make_file(input_xsd_path, output_path, encoding, creator):
-    parser = Parser()
+def make_file(input_xsd_path, output_path, encoding, creator, schema_ns):
+    parser = Parser(schema_ns=schema_ns)
     parser.parse_xsd(filepath=input_xsd_path, encoding=encoding)
     creator_class = get_creator_class(creator)
     creator = creator_class(xs_elements=parser.external_objects)
