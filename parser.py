@@ -307,26 +307,43 @@ class Parser(object):
 
         return c_type
 
-    def _make_sequence(self, node_sequence, parent_c_type, as_external=False):
+    def _make_sequence(self, node_sequence, parent_c_type=None, as_external=False):
         _xs = self.schema_ns
+        result_list = []
         for node_el in self.xpath_list(node_sequence, '{}:element'.format(_xs), namespaces=node_sequence.nsmap):
             seq_el = self.make_element(node_el, as_external=as_external)
             self.main_map.set(seq_el.name, seq_el)
             if as_external and seq_el.complex_type:
                 self.external_objects.append(seq_el)
-            parent_c_type.sequence.append(seq_el)
-        node_choice = self.xpath_get(node_sequence, '{}:choice'.format(_xs), namespaces=node_sequence.nsmap)
-        if node_choice is not None:
-            self._make_choice(node_choice, parent_c_type, as_external=as_external)
+            if parent_c_type is not None:
+                parent_c_type.sequence.append(seq_el)
+            result_list.append(seq_el)
+        node_choices = self.xpath_list(node_sequence, '{}:choice'.format(_xs), namespaces=node_sequence.nsmap)
+        for node_choice in node_choices:
+            choices_list = self._make_choice(node_choice, as_external=as_external)
+            if parent_c_type is not None:
+                parent_c_type.sequence.append(choices_list)
+            result_list.append(choices_list)
+        return result_list
 
-    def _make_choice(self, node_choice, parent_c_type, as_external=False):
+    def _make_choice(self, node_choice, parent_c_type=None, as_external=False):
         _xs = self.schema_ns
+        result_list = []
         for node_el in self.xpath_list(node_choice, '{}:element'.format(_xs), namespaces=node_choice.nsmap):
             choice_el = self.make_element(node_el, as_external=as_external)
             self.main_map.set(choice_el.name, choice_el)
             if as_external and choice_el.complex_type:
                 self.external_objects.append(choice_el)
-            parent_c_type.choice.append(choice_el)
+            if parent_c_type:
+                parent_c_type.choice.append(choice_el)
+            result_list.append(choice_el)
+
+        for node_seq in self.xpath_list(node_choice, '{}:sequence'.format(_xs), namespaces=node_choice.nsmap):
+            sequence_list = self._make_sequence(node_seq, as_external=as_external)
+            if parent_c_type is not None:
+                parent_c_type.choice.append(sequence_list)
+            result_list.append(sequence_list)
+        return result_list
 
     def make_element(self, node, as_external=False):
 
