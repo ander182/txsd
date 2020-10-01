@@ -1,6 +1,7 @@
 from lxml import etree
 from exceptions import XSInputError, XSParserError, XSParserNotImplemented
-from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement, XSSimpleType
+from models import XSStringType, XSIntegerType, XSDecimalType, XSComplexType, XSAttribute, XSElement, XSSimpleType, \
+    XSDateType
 
 
 class CTRelation(object):
@@ -62,7 +63,10 @@ class MainMap(object):
     def get(self, name):
         result = self.mm.get(name)
         if not result and name.startswith('{}:'.format(self.schema_ns)):
-            result = XSStringType(name=name)
+            if name == '{}:date'.format(self.schema_ns):
+                result = XSDateType(name)
+            else:
+                result = XSStringType(name=name)
         return result
 
 
@@ -238,6 +242,9 @@ class Parser(object):
         elif base == _xs+':decimal':
             s_type = XSDecimalType(name=name, documentation=documentation)
 
+        elif base == _xs+':date':
+            s_type = XSDateType(name=name, documentation=documentation)
+
         elif self.main_map.get(base):
             s_type = self.main_map.get(base)
 
@@ -307,45 +314,47 @@ class Parser(object):
 
         return c_type
 
-    def _make_sequence(self, node_sequence, parent_c_type=None, as_external=False):
+    def _make_sequence(self, node_sequence, parent_c_type=None, as_external=False, under_choice=False):
         _xs = self.schema_ns
         result_list = []
-        for node_el in self.xpath_list(node_sequence, '{}:element'.format(_xs), namespaces=node_sequence.nsmap):
-            seq_el = self.make_element(node_el, as_external=as_external)
-            self.main_map.set(seq_el.name, seq_el)
-            if as_external and seq_el.complex_type:
-                self.external_objects.append(seq_el)
-            if parent_c_type is not None:
-                parent_c_type.sequence.append(seq_el)
-            result_list.append(seq_el)
-        node_choices = self.xpath_list(node_sequence, '{}:choice'.format(_xs), namespaces=node_sequence.nsmap)
-        for node_choice in node_choices:
-            choices_list = self._make_choice(node_choice, as_external=as_external)
-            if parent_c_type is not None:
-                parent_c_type.sequence.append(choices_list)
-            result_list.append(choices_list)
+        for node_el in node_sequence.getchildren():
+            if node_el.tag == self.get_tag('element'):
+                seq_el = self.make_element(node_el, as_external=as_external, under_choice=under_choice)
+                self.main_map.set(seq_el.name, seq_el)
+                if as_external and seq_el.complex_type:
+                    self.external_objects.append(seq_el)
+                if parent_c_type is not None:
+                    parent_c_type.sequence.append(seq_el)
+                result_list.append(seq_el)
+            elif node_el.tag == self.get_tag('choice'):
+                choices_list = self._make_choice(node_el, as_external=as_external)
+                if parent_c_type is not None:
+                    parent_c_type.sequence.append(choices_list)
+                result_list.append(choices_list)
+
         return result_list
 
     def _make_choice(self, node_choice, parent_c_type=None, as_external=False):
         _xs = self.schema_ns
         result_list = []
-        for node_el in self.xpath_list(node_choice, '{}:element'.format(_xs), namespaces=node_choice.nsmap):
-            choice_el = self.make_element(node_el, as_external=as_external)
-            self.main_map.set(choice_el.name, choice_el)
-            if as_external and choice_el.complex_type:
-                self.external_objects.append(choice_el)
-            if parent_c_type:
-                parent_c_type.choice.append(choice_el)
-            result_list.append(choice_el)
+        for node_el in node_choice.getchildren():
+            if node_el.tag == self.get_tag('element'):
+                choice_el = self.make_element(node_el, as_external=as_external, under_choice=True)
+                self.main_map.set(choice_el.name, choice_el)
+                if as_external and choice_el.complex_type:
+                    self.external_objects.append(choice_el)
+                if parent_c_type:
+                    parent_c_type.choice.append(choice_el)
+                result_list.append(choice_el)
+            elif node_el.tag == self.get_tag('sequence'):
+                sequence_list = self._make_sequence(node_el, as_external=as_external, under_choice=True)
+                if parent_c_type is not None:
+                    parent_c_type.choice.append(sequence_list)
+                result_list.append(sequence_list)
 
-        for node_seq in self.xpath_list(node_choice, '{}:sequence'.format(_xs), namespaces=node_choice.nsmap):
-            sequence_list = self._make_sequence(node_seq, as_external=as_external)
-            if parent_c_type is not None:
-                parent_c_type.choice.append(sequence_list)
-            result_list.append(sequence_list)
         return result_list
 
-    def make_element(self, node, as_external=False):
+    def make_element(self, node, as_external=False, under_choice=False):
 
         _xs = self.schema_ns
         name = node.attrib.get('name')
@@ -356,6 +365,7 @@ class Parser(object):
 
         el = XSElement(name=name)
         el.documentation = documentation
+        el.under_choice = under_choice
 
         min_occurs = node.attrib.get('minOccurs')
         if min_occurs:

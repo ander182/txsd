@@ -60,6 +60,12 @@ class XSDecimalType(XSBaseNumericType):
         self.init_restriction('fraction_digits', 'fractionDigits')
 
 
+class XSDateType(XSSimpleType):
+
+    def __init__(self, name=None, documentation=''):
+        super().__init__(name=name, documentation=documentation)
+
+
 class XSAttribute(object):
 
     def __init__(self, name, required=False):
@@ -108,6 +114,8 @@ class XSElement(object):
 
         self.complex_type = None
         self.simple_type = None
+
+        self.under_choice = False
 
     def __str__(self):
         return 'Element <{}>'.format(self.name)

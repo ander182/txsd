@@ -2,7 +2,7 @@ import abc
 
 from creators.mixins import TranslitMixin
 from creators.utils import _make_alternative_in_seq, _make_alternative_in_choice, _make_plane_list
-from models import XSElement, XSBaseNumericType
+from models import XSElement, XSBaseNumericType, XSDateType
 
 
 class BaseCommonClassBuilder(TranslitMixin, metaclass=abc.ABCMeta):
@@ -225,11 +225,28 @@ class BaseCommonClassBuilder(TranslitMixin, metaclass=abc.ABCMeta):
                 result = '0'
         return result
 
-    def get_attr_value_template(self, attribute) -> str:
+    def get_attr_value_template(self, attribute)-> str:
+
+        if attribute.simple_type:
+            if isinstance(attribute.simple_type, XSDateType):
+                return '{attr}.strftime("%Y-%m-%d")'
         return 'self.quote_attrib({attr})'
 
     def get_simple_type_value_template(self, stype) -> str:
         return '{attr}'
+
+    def get_simple_type_default(self, seq_el):
+        if seq_el.max_occurs == 1:
+            if seq_el.min_occurs:
+                if isinstance(seq_el.simple_type, XSBaseNumericType):
+                    _default = "'0'"
+                else:
+                    _default = "''"
+            else:
+                _default = 'None'
+        else:
+            _default = "[]"
+        return _default
 
     def build_export_children(self) -> str:
         result = ''
@@ -240,14 +257,14 @@ class BaseCommonClassBuilder(TranslitMixin, metaclass=abc.ABCMeta):
             if self.all_sequences:
                 result += self.add_row('# sequence', level=2)
                 for seq_el in self.all_sequences:
-
                     seq_el_name = self.sequence_names.get(seq_el.name)
-                    if not seq_el.min_occurs:
+                    if not seq_el.min_occurs or seq_el.under_choice:
                         result += self.add_row('if self.{}:'.format(seq_el_name), level=2)
                         next_level = 3
                     else:
                         next_level = 2
                     if seq_el.complex_type:
+
                         if seq_el.max_occurs == 1:
                             result += self.add_row('self.{}.export(outfile, level=child_level, name="{}")'.format(seq_el_name, seq_el.name), level=next_level)
                         else:
@@ -255,10 +272,7 @@ class BaseCommonClassBuilder(TranslitMixin, metaclass=abc.ABCMeta):
                             result += self.add_row('el.export(outfile, level=child_level, name="{}")'.format(seq_el.name), level=next_level+1)
                     elif seq_el.simple_type:
                         stype_template = self.get_simple_type_value_template(seq_el.simple_type)
-                        if seq_el.max_occurs == 1:
-                            _default = "''" if seq_el.min_occurs else 'None'
-                        else:
-                            _default = "[]"
+                        _default = self.get_simple_type_default(seq_el)
                         result += self.add_row('{stype_low} = {template} if self.{name} is not None else {default}'.format(
                             stype_low=seq_el_name.lower(),
                             template=stype_template.format(attr='self.' + seq_el_name),
