@@ -108,7 +108,7 @@ class Parser(object):
 
     def parse_xsd(self, filepath=None, from_string=None, encoding=None):
         if filepath:
-            parser = etree.XMLParser(encoding=encoding)
+            parser = etree.XMLParser(encoding=encoding, recover=True)
             self.xs_etree = etree.parse(filepath, parser=parser)
         elif from_string:
             self.xs_etree = etree.fromstring(from_string)
