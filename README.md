@@ -9,7 +9,7 @@ To use you need Python3 and `lxml` installed in it.
  
 ### Available parameters:
 
-`-i`  `--input` -  path to XSD-schema file. Thr only required parameter.
+`-i`  `--input` -  path to XSD-schema file. The only required parameter.
 
 `-o` `--output` - path to target python module. If file exists, then it will be overwritten. if paramenter is not specified, using input name + '.xsd'
 
